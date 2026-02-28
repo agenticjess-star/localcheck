@@ -15,7 +15,7 @@ const stats = [
   { value: '∞', label: 'Buckets to get' },
 ];
 
-export default function LandingPage({ onEnter }: { onEnter: () => void }) {
+export default function LandingPage({ onEnter, onSignIn }: { onEnter: () => void; onSignIn?: () => void }) {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
@@ -54,7 +54,7 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
               <Button
                 variant="outline"
                 size="lg"
-                onClick={onEnter}
+                onClick={onSignIn ?? onEnter}
                 className="border-border text-foreground hover:bg-secondary h-12"
               >
                 Sign In
