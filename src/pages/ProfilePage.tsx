@@ -1,26 +1,37 @@
-import { CURRENT_USER, getInitials, DEMO_MATCHES } from '@/lib/mock-data';
-import { LogOut, Settings, Trophy, Swords, Bell, BellOff } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { LogOut, Bell, Trophy } from 'lucide-react';
+import { useAuth } from '@/lib/auth-context';
+import { matches, type Match1v1, type Profile } from '@/lib/db';
+import { getInitials } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
 
 export default function ProfilePage({ onLogout }: { onLogout: () => void }) {
+  const { profile } = useAuth();
   const [notifs, setNotifs] = useState({ checkins: true, reminders: true, tournaments: true });
+  const [wins, setWins] = useState(0);
+  const [losses, setLosses] = useState(0);
 
-  const wins = DEMO_MATCHES.filter(m => m.winner_id === CURRENT_USER.id && m.status === 'confirmed').length;
-  const losses = DEMO_MATCHES.filter(m => m.loser_id === CURRENT_USER.id && m.status === 'confirmed').length;
+  useEffect(() => {
+    if (!profile) return;
+    matches.getRecent(100).then(ms => {
+      setWins(ms.filter(m => m.winner_id === profile.user_id && m.status === 'confirmed').length);
+      setLosses(ms.filter(m => m.loser_id === profile.user_id && m.status === 'confirmed').length);
+    }).catch(() => {});
+  }, [profile]);
+
+  if (!profile) return null;
 
   return (
     <div className="p-4 space-y-6">
-      {/* Profile card */}
       <div className="bg-card border border-border rounded-2xl p-6 shadow-card text-center">
         <div className="w-20 h-20 rounded-full bg-gradient-court text-primary-foreground text-2xl font-bold flex items-center justify-center mx-auto mb-4">
-          {getInitials(CURRENT_USER.name)}
+          {getInitials(profile.name)}
         </div>
-        <h2 className="font-display text-xl font-bold">{CURRENT_USER.name}</h2>
-        <p className="text-sm text-muted-foreground">{CURRENT_USER.handle}</p>
+        <h2 className="font-display text-xl font-bold">{profile.name}</h2>
+        {profile.handle && <p className="text-sm text-muted-foreground">@{profile.handle}</p>}
         <div className="flex items-center justify-center gap-6 mt-4">
           <div className="text-center">
-            <span className="font-display font-bold text-lg text-primary">{CURRENT_USER.rating}</span>
+            <span className="font-display font-bold text-lg text-primary">{profile.rating}</span>
             <p className="text-[10px] text-muted-foreground uppercase">ELO</p>
           </div>
           <div className="w-px h-8 bg-border" />
@@ -36,7 +47,6 @@ export default function ProfilePage({ onLogout }: { onLogout: () => void }) {
         </div>
       </div>
 
-      {/* Notification settings */}
       <div className="bg-card border border-border rounded-xl p-4 shadow-card">
         <h3 className="font-display font-semibold text-sm mb-4 flex items-center gap-2">
           <Bell className="w-4 h-4 text-primary" />
@@ -50,22 +60,14 @@ export default function ProfilePage({ onLogout }: { onLogout: () => void }) {
           ].map(item => (
             <div key={item.key} className="flex items-center justify-between">
               <span className="text-sm">{item.label}</span>
-              <button
-                onClick={() => setNotifs(prev => ({ ...prev, [item.key]: !prev[item.key] }))}
-                className={`w-10 h-6 rounded-full transition-colors relative ${
-                  notifs[item.key] ? 'bg-primary' : 'bg-secondary'
-                }`}
-              >
-                <div className={`absolute top-1 w-4 h-4 rounded-full transition-transform ${
-                  notifs[item.key] ? 'translate-x-5 bg-primary-foreground' : 'translate-x-1 bg-muted-foreground'
-                }`} />
+              <button onClick={() => setNotifs(prev => ({ ...prev, [item.key]: !prev[item.key] }))} className={`w-10 h-6 rounded-full transition-colors relative ${notifs[item.key] ? 'bg-primary' : 'bg-secondary'}`}>
+                <div className={`absolute top-1 w-4 h-4 rounded-full transition-transform ${notifs[item.key] ? 'translate-x-5 bg-primary-foreground' : 'translate-x-1 bg-muted-foreground'}`} />
               </button>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Future ideas */}
       <div className="bg-card border border-border rounded-xl p-4 shadow-card">
         <h3 className="font-display font-semibold text-sm mb-2">Coming Soon</h3>
         <ul className="space-y-1.5 text-xs text-muted-foreground">
@@ -76,13 +78,8 @@ export default function ProfilePage({ onLogout }: { onLogout: () => void }) {
         </ul>
       </div>
 
-      <Button
-        variant="outline"
-        className="w-full border-destructive/30 text-destructive hover:bg-destructive/10"
-        onClick={onLogout}
-      >
-        <LogOut className="w-4 h-4 mr-2" />
-        Sign Out
+      <Button variant="outline" className="w-full border-destructive/30 text-destructive hover:bg-destructive/10" onClick={onLogout}>
+        <LogOut className="w-4 h-4 mr-2" />Sign Out
       </Button>
     </div>
   );

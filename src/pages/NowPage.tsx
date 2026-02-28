@@ -1,18 +1,63 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Clock, MessageCircle, Plus, Users } from 'lucide-react';
-import { DEMO_CHECKINS, getUserById, getInitials, timeAgo } from '@/lib/mock-data';
+import { MapPin, MessageCircle, Users } from 'lucide-react';
+import { checkIns, type CheckIn, type Profile } from '@/lib/db';
+import { useAuth } from '@/lib/auth-context';
+import { getInitials, timeAgo } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
 
+type CheckInWithProfile = CheckIn & { profile: Profile };
+
 export default function NowPage() {
-  const [checkedIn, setCheckedIn] = useState(false);
+  const { session } = useAuth();
+  const userId = session?.user?.id;
+  const [activeCheckins, setActiveCheckins] = useState<CheckInWithProfile[]>([]);
+  const [myCheckin, setMyCheckin] = useState<CheckIn | null>(null);
   const [note, setNote] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const handleCheckIn = () => {
-    setCheckedIn(true);
-    setShowForm(false);
-    setNote('');
+  const load = async () => {
+    try {
+      const cis = await checkIns.getActive();
+      setActiveCheckins(cis);
+      if (userId) {
+        const mine = await checkIns.getActiveForUser(userId);
+        setMyCheckin(mine);
+      }
+    } catch (e) {
+      console.error('Failed to load check-ins', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+    const unsub = checkIns.onChanges(() => load());
+    return unsub;
+  }, [userId]);
+
+  const handleCheckIn = async () => {
+    if (!userId) return;
+    try {
+      await checkIns.create(userId, note);
+      setShowForm(false);
+      setNote('');
+      await load();
+    } catch (e) {
+      console.error('Check-in failed', e);
+    }
+  };
+
+  const handleCheckOut = async () => {
+    if (!userId) return;
+    try {
+      await checkIns.remove(userId);
+      await load();
+    } catch (e) {
+      console.error('Check-out failed', e);
+    }
   };
 
   return (
@@ -27,19 +72,21 @@ export default function NowPage() {
           </div>
           <div className="flex items-end justify-between">
             <div>
-              <h2 className="font-display text-3xl font-bold text-gradient-court">{DEMO_CHECKINS.length + (checkedIn ? 1 : 0)}</h2>
+              <h2 className="font-display text-3xl font-bold text-gradient-court">{activeCheckins.length}</h2>
               <p className="text-sm text-muted-foreground mt-1">people at the court right now</p>
             </div>
             <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-court-green/20 border border-court-green/30">
               <div className="w-2 h-2 rounded-full bg-court-green animate-pulse-glow" />
-              <span className="text-xs font-medium" style={{ color: 'hsl(142 71% 45%)' }}>Active</span>
+              <span className="text-xs font-medium" style={{ color: 'hsl(142 71% 45%)' }}>
+                {activeCheckins.length > 0 ? 'Active' : 'Empty'}
+              </span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Check-in button */}
-      {!checkedIn ? (
+      {!myCheckin ? (
         !showForm ? (
           <Button
             onClick={() => setShowForm(true)}
@@ -62,15 +109,10 @@ export default function NowPage() {
               className="w-full bg-secondary text-foreground placeholder:text-muted-foreground rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
             <div className="flex gap-2">
-              <Button
-                onClick={handleCheckIn}
-                className="flex-1 bg-gradient-court text-primary-foreground hover:opacity-90"
-              >
+              <Button onClick={handleCheckIn} className="flex-1 bg-gradient-court text-primary-foreground hover:opacity-90">
                 Check In
               </Button>
-              <Button variant="outline" onClick={() => setShowForm(false)}>
-                Cancel
-              </Button>
+              <Button variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
             </div>
           </motion.div>
         )
@@ -85,12 +127,7 @@ export default function NowPage() {
               <p className="text-xs text-muted-foreground">Auto-expires in 2 hours</p>
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCheckedIn(false)}
-            className="border-primary/30 text-primary hover:bg-primary/10"
-          >
+          <Button variant="outline" size="sm" onClick={handleCheckOut} className="border-primary/30 text-primary hover:bg-primary/10">
             Check Out
           </Button>
         </div>
@@ -102,11 +139,13 @@ export default function NowPage() {
           <Users className="w-4 h-4" />
           Who's Here
         </h3>
-        <div className="space-y-2">
-          {DEMO_CHECKINS.map((ci, i) => {
-            const user = getUserById(ci.user_id);
-            if (!user) return null;
-            return (
+        {loading ? (
+          <p className="text-sm text-muted-foreground text-center py-6">Loading...</p>
+        ) : activeCheckins.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-6">No one's here yet. Be the first!</p>
+        ) : (
+          <div className="space-y-2">
+            {activeCheckins.map((ci, i) => (
               <motion.div
                 key={ci.id}
                 initial={{ opacity: 0, y: 10 }}
@@ -115,12 +154,12 @@ export default function NowPage() {
                 className="flex items-center gap-3 bg-card border border-border rounded-xl px-4 py-3 shadow-card"
               >
                 <div className="w-10 h-10 rounded-full bg-primary/15 text-primary text-sm font-bold flex items-center justify-center shrink-0">
-                  {getInitials(user.name)}
+                  {getInitials(ci.profile.name)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-sm">{user.name}</span>
-                    <span className="text-xs text-muted-foreground">{user.handle}</span>
+                    <span className="font-medium text-sm">{ci.profile.name}</span>
+                    {ci.profile.handle && <span className="text-xs text-muted-foreground">@{ci.profile.handle}</span>}
                   </div>
                   {ci.note && (
                     <p className="text-xs text-primary/80 mt-0.5 flex items-center gap-1">
@@ -131,9 +170,9 @@ export default function NowPage() {
                 </div>
                 <span className="text-xs text-muted-foreground shrink-0">{timeAgo(ci.created_at)}</span>
               </motion.div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

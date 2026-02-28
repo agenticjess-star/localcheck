@@ -5,9 +5,8 @@ import AuthPage from './AuthPage';
 import AppShell from '@/components/AppShell';
 
 const Index = () => {
-  const { session, profile, loading, signOut } = useAuth();
+  const { session, loading, signOut } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
-  const [demoMode, setDemoMode] = useState(false);
 
   if (loading) {
     return (
@@ -17,25 +16,17 @@ const Index = () => {
     );
   }
 
-  // Logged in with real account
   if (session) {
     return <AppShell onLogout={signOut} />;
   }
 
-  // Demo mode (uses mock data, no auth)
-  if (demoMode) {
-    return <AppShell onLogout={() => setDemoMode(false)} />;
-  }
-
-  // Auth page
   if (showAuth) {
     return <AuthPage onBack={() => setShowAuth(false)} />;
   }
 
-  // Landing
   return (
     <LandingPage
-      onEnter={() => setDemoMode(true)}
+      onEnter={() => setShowAuth(true)}
       onSignIn={() => setShowAuth(true)}
     />
   );

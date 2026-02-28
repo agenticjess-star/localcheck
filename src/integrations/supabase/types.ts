@@ -14,6 +14,96 @@ export type Database = {
   }
   public: {
     Tables: {
+      check_ins: {
+        Row: {
+          court_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          note: string | null
+          user_id: string
+        }
+        Insert: {
+          court_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          note?: string | null
+          user_id: string
+        }
+        Update: {
+          court_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          note?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      matches_1v1: {
+        Row: {
+          court_id: string
+          created_at: string
+          id: string
+          loser_id: string
+          loser_score: number
+          status: string
+          winner_id: string
+          winner_score: number
+        }
+        Insert: {
+          court_id?: string
+          created_at?: string
+          id?: string
+          loser_id: string
+          loser_score?: number
+          status?: string
+          winner_id: string
+          winner_score?: number
+        }
+        Update: {
+          court_id?: string
+          created_at?: string
+          id?: string
+          loser_id?: string
+          loser_score?: number
+          status?: string
+          winner_id?: string
+          winner_score?: number
+        }
+        Relationships: []
+      }
+      plans: {
+        Row: {
+          court_id: string
+          created_at: string
+          end_at: string
+          id: string
+          note: string | null
+          start_at: string
+          user_id: string
+        }
+        Insert: {
+          court_id?: string
+          created_at?: string
+          end_at: string
+          id?: string
+          note?: string | null
+          start_at: string
+          user_id: string
+        }
+        Update: {
+          court_id?: string
+          created_at?: string
+          end_at?: string
+          id?: string
+          note?: string | null
+          start_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -46,6 +136,68 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      run_events: {
+        Row: {
+          court_id: string
+          created_at: string
+          created_by: string
+          format: string
+          id: string
+          max_players: number
+          note: string | null
+          start_at: string
+        }
+        Insert: {
+          court_id?: string
+          created_at?: string
+          created_by: string
+          format?: string
+          id?: string
+          max_players?: number
+          note?: string | null
+          start_at: string
+        }
+        Update: {
+          court_id?: string
+          created_at?: string
+          created_by?: string
+          format?: string
+          id?: string
+          max_players?: number
+          note?: string | null
+          start_at?: string
+        }
+        Relationships: []
+      }
+      run_rsvps: {
+        Row: {
+          created_at: string
+          id: string
+          run_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          run_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          run_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "run_rsvps_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "run_events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
