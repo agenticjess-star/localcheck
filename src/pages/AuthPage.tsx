@@ -24,7 +24,7 @@ export default function AuthPage({ onBack }: { onBack?: () => void }) {
           return;
         }
         await auth.signUp(email, password, name.trim());
-        toast.success('Welcome to CourtCheck! 🏀');
+        toast.success('Welcome to LocalCheck! 🏀');
       } else {
         await auth.signIn(email, password);
         toast.success('Welcome back!');
@@ -52,7 +52,7 @@ export default function AuthPage({ onBack }: { onBack?: () => void }) {
 
         <div className="text-center mb-8">
           <h1 className="font-display text-3xl font-bold">
-            <span className="text-gradient-court">Court</span>Check
+            <span className="text-gradient-sunset">Local</span>Check
           </h1>
           <p className="text-sm text-muted-foreground mt-2">
             {mode === 'login' ? 'Sign in to your court' : 'Join your court'}

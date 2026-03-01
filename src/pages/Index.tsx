@@ -11,7 +11,7 @@ const Index = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-gradient-court font-display text-2xl font-bold animate-pulse">CourtCheck</div>
+        <div className="text-gradient-sunset font-display text-2xl font-bold animate-pulse">LocalCheck</div>
       </div>
     );
   }
