@@ -216,11 +216,14 @@ export const plans = {
       .gte('end_at', new Date().toISOString())
       .order('start_at', { ascending: true });
     if (error) throw error;
+
     const allProfiles = await profiles.getAll();
-    return (data ?? []).map(p => ({
-      ...p,
-      profile: allProfiles.find(pr => pr.user_id === p.user_id)!,
-    })).filter(p => p.profile);
+    const profileByUserId = new Map(allProfiles.map((profile) => [profile.user_id, profile]));
+
+    return (data ?? []).flatMap((plan) => {
+      const profile = profileByUserId.get(plan.user_id);
+      return profile ? [{ ...plan, profile }] : [];
+    });
   },
 
   create: async (userId: string, startAt: string, endAt: string, note = '', courtId = 'court1') => {
@@ -254,12 +257,15 @@ export const matches = {
       .order('created_at', { ascending: false })
       .limit(limit);
     if (error) throw error;
+
     const allProfiles = await profiles.getAll();
-    return (data ?? []).map(m => ({
-      ...m,
-      winner: allProfiles.find(p => p.user_id === m.winner_id)!,
-      loser: allProfiles.find(p => p.user_id === m.loser_id)!,
-    })).filter(m => m.winner && m.loser);
+    const profileByUserId = new Map(allProfiles.map((profile) => [profile.user_id, profile]));
+
+    return (data ?? []).flatMap((match) => {
+      const winner = profileByUserId.get(match.winner_id);
+      const loser = profileByUserId.get(match.loser_id);
+      return winner && loser ? [{ ...match, winner, loser }] : [];
+    });
   },
 
   create: async (winnerId: string, loserId: string, winnerScore: number, loserScore: number, courtId = 'court1') => {
@@ -291,13 +297,28 @@ export const runEvents = {
       .gte('start_at', new Date().toISOString())
       .order('start_at', { ascending: true });
     if (error) throw error;
+
     const allProfiles = await profiles.getAll();
+    const profileByUserId = new Map(allProfiles.map((profile) => [profile.user_id, profile]));
     const { data: allRsvps } = await supabase.from('run_rsvps').select('*');
-    return (data ?? []).map(r => ({
-      ...r,
-      creator: allProfiles.find(p => p.user_id === r.created_by)!,
-      rsvps: (allRsvps ?? []).filter(rv => rv.run_id === r.id),
-    })).filter(r => r.creator);
+
+    const rsvpsByRunId = (allRsvps ?? []).reduce((acc, rsvp) => {
+      const existing = acc.get(rsvp.run_id) ?? [];
+      existing.push(rsvp);
+      acc.set(rsvp.run_id, existing);
+      return acc;
+    }, new Map<string, RunRSVP[]>());
+
+    return (data ?? []).flatMap((runEvent) => {
+      const creator = profileByUserId.get(runEvent.created_by);
+      if (!creator) return [];
+
+      return [{
+        ...runEvent,
+        creator,
+        rsvps: rsvpsByRunId.get(runEvent.id) ?? [],
+      }];
+    });
   },
 
   create: async (createdBy: string, startAt: string, format: string, maxPlayers: number, note = '', courtId = 'court1') => {
@@ -326,7 +347,13 @@ export const runEvents = {
   getRsvpProfiles: async (runId: string): Promise<Profile[]> => {
     const { data: rsvps } = await supabase.from('run_rsvps').select('user_id').eq('run_id', runId);
     if (!rsvps?.length) return [];
+
     const allProfiles = await profiles.getAll();
-    return rsvps.map(r => allProfiles.find(p => p.user_id === r.user_id)!).filter(Boolean);
+    const profileByUserId = new Map(allProfiles.map((profile) => [profile.user_id, profile]));
+
+    return rsvps.flatMap((rsvp) => {
+      const profile = profileByUserId.get(rsvp.user_id);
+      return profile ? [profile] : [];
+    });
   },
 };
