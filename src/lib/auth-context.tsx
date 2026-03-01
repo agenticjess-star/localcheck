@@ -25,9 +25,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadProfile = async (userId: string) => {
+  const getFallbackName = (sessionValue: Session | null) => {
+    const metaName = sessionValue?.user?.user_metadata?.name;
+    if (typeof metaName === 'string' && metaName.trim().length > 0) return metaName.trim();
+
+    const emailName = sessionValue?.user?.email?.split('@')[0];
+    if (emailName && emailName.trim().length > 0) return emailName;
+
+    return 'Player';
+  };
+
+  const loadProfile = async (userId: string, fallbackName: string) => {
     try {
-      const p = await profiles.get(userId);
+      let p = await profiles.get(userId);
+      if (!p) {
+        p = await profiles.ensure(userId, fallbackName);
+      }
       setProfile(p);
     } catch (e) {
       console.error('Failed to load profile:', e);
@@ -40,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     auth.getSession().then(({ data: { session: s } }) => {
       setSession(s);
       if (s?.user) {
-        loadProfile(s.user.id).finally(() => setLoading(false));
+        loadProfile(s.user.id, getFallbackName(s)).finally(() => setLoading(false));
       } else {
         setLoading(false);
       }
@@ -53,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const sub = auth.onAuthStateChange(async (s) => {
       setSession(s);
       if (s?.user) {
-        await loadProfile(s.user.id);
+        await loadProfile(s.user.id, getFallbackName(s));
       } else {
         setProfile(null);
       }

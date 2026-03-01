@@ -108,6 +108,26 @@ export const profiles = {
     return data;
   },
 
+  ensure: async (userId: string, name?: string): Promise<Profile> => {
+    const existing = await profiles.get(userId);
+    if (existing) return existing;
+
+    const fallbackName = name?.trim() || 'Player';
+    const { data, error } = await supabase
+      .from('profiles')
+      .insert({ user_id: userId, name: fallbackName })
+      .select('*')
+      .single();
+
+    if (error) {
+      const retry = await profiles.get(userId);
+      if (retry) return retry;
+      throw error;
+    }
+
+    return data;
+  },
+
   update: async (userId: string, updates: Partial<Pick<Profile, 'name' | 'handle' | 'avatar_url'>>) => {
     const { error } = await supabase
       .from('profiles')
@@ -129,28 +149,22 @@ export const profiles = {
 // ─── Check-ins ───────────────────────────────────────────────
 export const checkIns = {
   getActive: async (courtId = 'court1'): Promise<(CheckIn & { profile: Profile })[]> => {
-    const { data, error } = await supabase
+    const { data: cis, error } = await supabase
       .from('check_ins')
-      .select('*, profile:profiles!check_ins_user_id_fkey(*)')
+      .select('*')
       .eq('court_id', courtId)
       .gt('expires_at', new Date().toISOString())
       .order('created_at', { ascending: false });
-    // Fallback: if foreign key join fails, do manual join
-    if (error) {
-      const { data: cis, error: e2 } = await supabase
-        .from('check_ins')
-        .select('*')
-        .eq('court_id', courtId)
-        .gt('expires_at', new Date().toISOString())
-        .order('created_at', { ascending: false });
-      if (e2) throw e2;
-      const allProfiles = await profiles.getAll();
-      return (cis ?? []).map(ci => ({
-        ...ci,
-        profile: allProfiles.find(p => p.user_id === ci.user_id)!,
-      })).filter(ci => ci.profile);
-    }
-    return (data ?? []) as any;
+
+    if (error) throw error;
+
+    const allProfiles = await profiles.getAll();
+    const profileByUserId = new Map(allProfiles.map((profile) => [profile.user_id, profile]));
+
+    return (cis ?? []).flatMap((ci) => {
+      const profile = profileByUserId.get(ci.user_id);
+      return profile ? [{ ...ci, profile }] : [];
+    });
   },
 
   getActiveForUser: async (userId: string, courtId = 'court1'): Promise<CheckIn | null> => {
