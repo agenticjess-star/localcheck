@@ -5,6 +5,7 @@ import { profiles, matches, type Profile, type Match1v1 } from '@/lib/db';
 import { useAuth } from '@/lib/auth-context';
 import { getInitials, timeAgo } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 type MatchWithProfiles = Match1v1 & { winner: Profile; loser: Profile };
 
@@ -16,8 +17,8 @@ export default function CompetePage() {
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
   const [recentMatches, setRecentMatches] = useState<MatchWithProfiles[]>([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
-  // Form
   const [opponentId, setOpponentId] = useState('');
   const [myScore, setMyScore] = useState(11);
   const [oppScore, setOppScore] = useState(0);
@@ -43,25 +44,36 @@ export default function CompetePage() {
 
   const handleSubmit = async () => {
     if (!userId || !opponentId) return;
+    if (userId === opponentId) {
+      toast.error("Can't play yourself!");
+      return;
+    }
+    setSubmitting(true);
     try {
-      if (iWon) {
-        await matches.create(userId, opponentId, myScore, oppScore);
-      } else {
-        await matches.create(opponentId, userId, oppScore, myScore);
-      }
+      const winnerId = iWon ? userId : opponentId;
+      const loserId = iWon ? opponentId : userId;
+      const wScore = iWon ? myScore : oppScore;
+      const lScore = iWon ? oppScore : myScore;
+      await matches.create(winnerId, loserId, wScore, lScore);
       setShowLog(false);
+      toast.success('Match logged! Waiting for confirmation.');
       await load();
-    } catch (e) {
+    } catch (e: any) {
       console.error('Failed to log match', e);
+      toast.error(e?.message || 'Failed to log match');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleConfirm = async (matchId: string) => {
     try {
       await matches.confirm(matchId);
+      toast.success('Match confirmed! ✅');
       await load();
-    } catch (e) {
+    } catch (e: any) {
       console.error('Failed to confirm match', e);
+      toast.error(e?.message || 'Failed to confirm');
     }
   };
 
@@ -81,27 +93,33 @@ export default function CompetePage() {
         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="bg-card border border-border rounded-xl p-4 space-y-3 shadow-card">
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Opponent</label>
-            <select value={opponentId} onChange={e => setOpponentId(e.target.value)} className="w-full bg-secondary text-foreground rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
-              {others.map(u => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}
-            </select>
+            {others.length === 0 ? (
+              <p className="text-xs text-muted-foreground py-2">No other players yet. Invite someone!</p>
+            ) : (
+              <select value={opponentId} onChange={e => setOpponentId(e.target.value)} className="w-full bg-secondary text-foreground rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
+                {others.map(u => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}
+              </select>
+            )}
           </div>
           <div className="flex items-center gap-3">
             <label className="text-xs text-muted-foreground">Result:</label>
-            <button onClick={() => setIWon(true)} className={`px-3 py-1.5 rounded-lg text-xs font-medium ${iWon ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>I Won</button>
-            <button onClick={() => setIWon(false)} className={`px-3 py-1.5 rounded-lg text-xs font-medium ${!iWon ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>I Lost</button>
+            <button onClick={() => setIWon(true)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${iWon ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>I Won</button>
+            <button onClick={() => setIWon(false)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${!iWon ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>I Lost</button>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">My Score</label>
-              <input type="number" value={myScore} onChange={e => setMyScore(+e.target.value)} className="w-full bg-secondary text-foreground rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+              <input type="number" min={0} value={myScore} onChange={e => setMyScore(+e.target.value)} className="w-full bg-secondary text-foreground rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
             </div>
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">Their Score</label>
-              <input type="number" value={oppScore} onChange={e => setOppScore(+e.target.value)} className="w-full bg-secondary text-foreground rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+              <input type="number" min={0} value={oppScore} onChange={e => setOppScore(+e.target.value)} className="w-full bg-secondary text-foreground rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
             </div>
           </div>
           <div className="flex gap-2">
-            <Button onClick={handleSubmit} className="flex-1 bg-gradient-court text-primary-foreground hover:opacity-90">Submit Match</Button>
+            <Button onClick={handleSubmit} disabled={submitting || others.length === 0} className="flex-1 bg-gradient-court text-primary-foreground hover:opacity-90">
+              {submitting ? 'Submitting...' : 'Submit Match'}
+            </Button>
             <Button variant="outline" onClick={() => setShowLog(false)}>Cancel</Button>
           </div>
         </motion.div>
@@ -148,26 +166,26 @@ export default function CompetePage() {
             <motion.div key={match.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className="bg-card border border-border rounded-xl px-4 py-3 shadow-card">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-court-green/20 text-xs font-bold flex items-center justify-center" style={{ color: 'hsl(142 71% 45%)' }}>{getInitials(match.winner.name)}</div>
+                  <div className="w-8 h-8 rounded-full bg-court-green/20 text-court-green text-xs font-bold flex items-center justify-center">{getInitials(match.winner?.name || '?')}</div>
                   <div>
-                    <span className="text-sm font-medium">{match.winner.name}</span>
+                    <span className="text-sm font-medium">{match.winner?.name || 'Unknown'}</span>
                     <span className="text-xs text-muted-foreground ml-1">W</span>
                   </div>
                 </div>
                 <span className="font-display font-bold text-lg text-primary">{match.winner_score}–{match.loser_score}</span>
                 <div className="flex items-center gap-2">
                   <div className="text-right">
-                    <span className="text-sm font-medium">{match.loser.name}</span>
+                    <span className="text-sm font-medium">{match.loser?.name || 'Unknown'}</span>
                     <span className="text-xs text-muted-foreground ml-1">L</span>
                   </div>
-                  <div className="w-8 h-8 rounded-full bg-destructive/20 text-destructive text-xs font-bold flex items-center justify-center">{getInitials(match.loser.name)}</div>
+                  <div className="w-8 h-8 rounded-full bg-destructive/20 text-destructive text-xs font-bold flex items-center justify-center">{getInitials(match.loser?.name || '?')}</div>
                 </div>
               </div>
               <div className="flex items-center justify-between mt-2">
                 <span className="text-xs text-muted-foreground">{timeAgo(match.created_at)}</span>
                 {match.status === 'pending' ? (
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-court-amber/20" style={{ color: 'hsl(38 92% 50%)' }}>
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-court-amber/20 text-court-amber">
                       <Clock className="w-3 h-3 inline mr-1" />Pending
                     </span>
                     {match.loser_id === userId && (
@@ -175,7 +193,7 @@ export default function CompetePage() {
                     )}
                   </div>
                 ) : (
-                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-court-green/20" style={{ color: 'hsl(142 71% 45%)' }}>
+                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-court-green/20 text-court-green">
                     <Check className="w-3 h-3 inline mr-1" />Confirmed
                   </span>
                 )}

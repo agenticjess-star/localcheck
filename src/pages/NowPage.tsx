@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, MessageCircle, Users } from 'lucide-react';
 import { checkIns, type CheckIn, type Profile } from '@/lib/db';
 import { useAuth } from '@/lib/auth-context';
 import { getInitials, timeAgo } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 type CheckInWithProfile = CheckIn & { profile: Profile };
 
@@ -17,7 +18,7 @@ export default function NowPage() {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const cis = await checkIns.getActive();
       setActiveCheckins(cis);
@@ -30,13 +31,13 @@ export default function NowPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
 
   useEffect(() => {
     load();
     const unsub = checkIns.onChanges(() => load());
     return unsub;
-  }, [userId]);
+  }, [load]);
 
   const handleCheckIn = async () => {
     if (!userId) return;
@@ -44,9 +45,11 @@ export default function NowPage() {
       await checkIns.create(userId, note);
       setShowForm(false);
       setNote('');
+      toast.success("You're checked in! 🏀");
       await load();
-    } catch (e) {
+    } catch (e: any) {
       console.error('Check-in failed', e);
+      toast.error(e?.message || 'Check-in failed. Try again.');
     }
   };
 
@@ -54,9 +57,11 @@ export default function NowPage() {
     if (!userId) return;
     try {
       await checkIns.remove(userId);
+      toast.success('Checked out');
       await load();
-    } catch (e) {
+    } catch (e: any) {
       console.error('Check-out failed', e);
+      toast.error(e?.message || 'Check-out failed. Try again.');
     }
   };
 
@@ -77,7 +82,7 @@ export default function NowPage() {
             </div>
             <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-court-green/20 border border-court-green/30">
               <div className="w-2 h-2 rounded-full bg-court-green animate-pulse-glow" />
-              <span className="text-xs font-medium" style={{ color: 'hsl(142 71% 45%)' }}>
+              <span className="text-xs font-medium text-court-green">
                 {activeCheckins.length > 0 ? 'Active' : 'Empty'}
               </span>
             </div>
@@ -154,12 +159,12 @@ export default function NowPage() {
                 className="flex items-center gap-3 bg-card border border-border rounded-xl px-4 py-3 shadow-card"
               >
                 <div className="w-10 h-10 rounded-full bg-primary/15 text-primary text-sm font-bold flex items-center justify-center shrink-0">
-                  {getInitials(ci.profile.name)}
+                  {getInitials(ci.profile?.name || '?')}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-sm">{ci.profile.name}</span>
-                    {ci.profile.handle && <span className="text-xs text-muted-foreground">@{ci.profile.handle}</span>}
+                    <span className="font-medium text-sm">{ci.profile?.name || 'Unknown'}</span>
+                    {ci.profile?.handle && <span className="text-xs text-muted-foreground">@{ci.profile.handle}</span>}
                   </div>
                   {ci.note && (
                     <p className="text-xs text-primary/80 mt-0.5 flex items-center gap-1">

@@ -5,6 +5,7 @@ import { plans, type Plan, type Profile } from '@/lib/db';
 import { useAuth } from '@/lib/auth-context';
 import { formatTime, formatDate } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 type PlanWithProfile = Plan & { profile: Profile };
 
@@ -15,7 +16,6 @@ export default function SchedulePage() {
   const [allPlans, setAllPlans] = useState<PlanWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Form state
   const [date, setDate] = useState('');
   const [time, setTime] = useState('17:00');
   const [duration, setDuration] = useState(90);
@@ -35,29 +35,35 @@ export default function SchedulePage() {
   useEffect(() => { load(); }, []);
 
   const handleCreate = async () => {
-    if (!userId || !date) return;
+    if (!userId || !date) {
+      toast.error('Pick a date first');
+      return;
+    }
     const start = new Date(`${date}T${time}`);
     const end = new Date(start.getTime() + duration * 60000);
     try {
       await plans.create(userId, start.toISOString(), end.toISOString(), note);
       setShowForm(false);
       setDate(''); setNote('');
+      toast.success('Plan added! 📅');
       await load();
-    } catch (e) {
+    } catch (e: any) {
       console.error('Failed to create plan', e);
+      toast.error(e?.message || 'Failed to save plan');
     }
   };
 
   const handleDelete = async (planId: string) => {
     try {
       await plans.remove(planId);
+      toast.success('Plan removed');
       await load();
-    } catch (e) {
+    } catch (e: any) {
       console.error('Failed to delete plan', e);
+      toast.error(e?.message || 'Failed to delete plan');
     }
   };
 
-  // Group by day
   const grouped = allPlans.reduce((acc, plan) => {
     const day = formatDate(plan.start_at);
     if (!acc[day]) acc[day] = [];
@@ -123,7 +129,7 @@ export default function SchedulePage() {
                       <div className="w-1 h-10 rounded-full bg-gradient-court shrink-0" />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm">{plan.profile.name}</span>
+                          <span className="font-medium text-sm">{plan.profile?.name || 'Unknown'}</span>
                           {isMe && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/20 text-primary">YOU</span>}
                         </div>
                         <div className="flex items-center gap-2 mt-0.5">

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { LogOut, Bell, Trophy } from 'lucide-react';
+import { LogOut, Bell } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
-import { matches, type Match1v1, type Profile } from '@/lib/db';
+import { matches } from '@/lib/db';
 import { getInitials } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
 
@@ -19,7 +19,13 @@ export default function ProfilePage({ onLogout }: { onLogout: () => void }) {
     }).catch(() => {});
   }, [profile]);
 
-  if (!profile) return null;
+  if (!profile) {
+    return (
+      <div className="p-4 text-center">
+        <p className="text-sm text-muted-foreground py-6">Loading profile...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 space-y-6">
@@ -36,7 +42,7 @@ export default function ProfilePage({ onLogout }: { onLogout: () => void }) {
           </div>
           <div className="w-px h-8 bg-border" />
           <div className="text-center">
-            <span className="font-display font-bold text-lg" style={{ color: 'hsl(142 71% 45%)' }}>{wins}</span>
+            <span className="font-display font-bold text-lg text-court-green">{wins}</span>
             <p className="text-[10px] text-muted-foreground uppercase">Wins</p>
           </div>
           <div className="w-px h-8 bg-border" />
