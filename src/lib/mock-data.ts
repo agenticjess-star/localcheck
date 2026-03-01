@@ -134,12 +134,25 @@ export function getUserById(id: string): User | undefined {
   return DEMO_USERS.find(u => u.id === id);
 }
 
-export function getInitials(name: string): string {
-  return name.split(' ').map(n => n[0]).join('').toUpperCase();
+export function getInitials(name?: string | null): string {
+  const safeName = (name ?? '').trim();
+  if (!safeName) return '?';
+
+  const initials = safeName
+    .split(/\s+/)
+    .map((part) => part[0] ?? '')
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
+  return initials || '?';
 }
 
 export function timeAgo(dateStr: string): string {
-  const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
+  const timestamp = new Date(dateStr).getTime();
+  if (Number.isNaN(timestamp)) return '';
+
+  const diff = (Date.now() - timestamp) / 1000;
   if (diff < 60) return 'just now';
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
@@ -147,11 +160,15 @@ export function timeAgo(dateStr: string): string {
 }
 
 export function formatTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return '--:--';
+  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 }
 
 export function formatDate(dateStr: string): string {
   const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return 'TBD';
+
   const today = new Date();
   const tomorrow = new Date(today);
   tomorrow.setDate(today.getDate() + 1);
