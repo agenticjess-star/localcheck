@@ -14,13 +14,24 @@ const queryClient = new QueryClient();
 
 const App = () => {
   useEffect(() => {
-    const handler = (event: PromiseRejectionEvent) => {
+    const rejectionHandler = (event: PromiseRejectionEvent) => {
       console.error("Unhandled rejection:", event.reason);
       toast.error("Something went wrong. Please try again.");
       event.preventDefault();
     };
-    window.addEventListener("unhandledrejection", handler);
-    return () => window.removeEventListener("unhandledrejection", handler);
+
+    const errorHandler = (event: ErrorEvent) => {
+      console.error("Unhandled error:", event.error ?? event.message);
+      toast.error("Something went wrong. Please refresh and try again.");
+    };
+
+    window.addEventListener("unhandledrejection", rejectionHandler);
+    window.addEventListener("error", errorHandler);
+
+    return () => {
+      window.removeEventListener("unhandledrejection", rejectionHandler);
+      window.removeEventListener("error", errorHandler);
+    };
   }, []);
 
   return (
