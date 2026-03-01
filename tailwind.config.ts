@@ -55,6 +55,7 @@ export default {
           orange: "hsl(var(--court-orange))",
           amber: "hsl(var(--court-amber))",
           green: "hsl(var(--court-green))",
+          pink: "hsl(var(--court-pink))",
           surface: "hsl(var(--court-surface))",
         },
         sidebar: {

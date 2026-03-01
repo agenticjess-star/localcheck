@@ -29,7 +29,7 @@ export default function AppShell({ onLogout }: { onLogout: () => void }) {
       {/* Header */}
       <header className="sticky top-0 z-50 glass border-b border-border px-4 py-3">
         <div className="max-w-lg mx-auto flex items-center justify-between">
-          <h1 className="font-display text-lg font-bold text-gradient-court">CourtCheck</h1>
+          <h1 className="font-display text-lg font-bold text-gradient-sunset">LocalCheck</h1>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setActiveTab('profile')}

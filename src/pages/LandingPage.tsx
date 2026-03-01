@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { MapPin, Calendar, Trophy, Users, ChevronRight, Zap, Shield, Clock } from 'lucide-react';
+import { MapPin, Calendar, Trophy, Users, ChevronRight, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const features = [
@@ -18,27 +18,30 @@ const stats = [
 export default function LandingPage({ onEnter, onSignIn }: { onEnter: () => void; onSignIn?: () => void }) {
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero */}
+      {/* Hero with background image */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 court-pattern" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/50 to-background" />
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: 'url(/images/hero-bg.jpeg)' }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/70 to-background" />
         
-        <div className="relative max-w-lg mx-auto px-6 pt-16 pb-20 text-center">
+        <div className="relative max-w-lg mx-auto px-6 pt-20 pb-28 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium mb-6">
-              <Zap className="w-3 h-3" />
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-background/40 backdrop-blur-md border border-foreground/10 text-foreground text-xs font-medium mb-6">
+              <Zap className="w-3 h-3 text-primary" />
               Replace your group chat
             </div>
             
             <h1 className="font-display text-5xl sm:text-6xl font-bold leading-[1.1] mb-4">
-              <span className="text-gradient-court">Court</span>Check
+              <span className="text-gradient-sunset">Local</span>Check
             </h1>
             
-            <p className="text-lg text-muted-foreground max-w-sm mx-auto mb-8 leading-relaxed">
+            <p className="text-lg text-foreground/75 max-w-sm mx-auto mb-8 leading-relaxed">
               Know who's at the court, who's coming, and who's got next. Your pickup basketball community, simplified.
             </p>
             
@@ -55,7 +58,7 @@ export default function LandingPage({ onEnter, onSignIn }: { onEnter: () => void
                 variant="outline"
                 size="lg"
                 onClick={onSignIn ?? onEnter}
-                className="border-border text-foreground hover:bg-secondary h-12"
+                className="border-foreground/20 text-foreground hover:bg-secondary backdrop-blur-sm h-12"
               >
                 Sign In
               </Button>
@@ -65,7 +68,7 @@ export default function LandingPage({ onEnter, onSignIn }: { onEnter: () => void
       </div>
 
       {/* Stats */}
-      <div className="max-w-lg mx-auto px-6 -mt-6">
+      <div className="max-w-lg mx-auto px-6 -mt-10">
         <div className="grid grid-cols-3 gap-3">
           {stats.map((s, i) => (
             <motion.div
@@ -125,7 +128,7 @@ export default function LandingPage({ onEnter, onSignIn }: { onEnter: () => void
               transition={{ delay: 0.8 + i * 0.1 }}
               className="flex items-center gap-4"
             >
-              <div className="w-10 h-10 rounded-xl bg-gradient-court text-primary-foreground font-display font-bold flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-gradient-sunset text-primary-foreground font-display font-bold flex items-center justify-center shrink-0">
                 {item.step}
               </div>
               <div>
@@ -156,7 +159,7 @@ export default function LandingPage({ onEnter, onSignIn }: { onEnter: () => void
       {/* Footer */}
       <footer className="border-t border-border py-6 text-center">
         <p className="text-xs text-muted-foreground">
-          Built for ballers, by ballers. <span className="text-gradient-court font-semibold">CourtCheck</span> © 2026
+          Built for ballers, by ballers. <span className="text-gradient-sunset font-semibold">LocalCheck</span> © 2026
         </p>
       </footer>
     </div>
