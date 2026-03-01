@@ -49,6 +49,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    const loadingTimeout = window.setTimeout(() => {
+      setLoading((current) => {
+        if (current) {
+          console.warn('Auth bootstrap timed out; continuing without blocking UI.');
+          return false;
+        }
+        return current;
+      });
+    }, 6000);
+
     // Get initial session first
     auth.getSession().then(({ data: { session: s } }) => {
       setSession(s);
@@ -73,7 +83,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    return () => sub.unsubscribe();
+    return () => {
+      window.clearTimeout(loadingTimeout);
+      sub.unsubscribe();
+    };
   }, []);
 
   const refreshProfile = async () => {
