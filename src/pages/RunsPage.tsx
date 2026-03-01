@@ -5,6 +5,7 @@ import { runEvents, profiles as profilesDb, type RunEvent, type RunRSVP, type Pr
 import { useAuth } from '@/lib/auth-context';
 import { getInitials, formatDate, formatTime } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 type RunWithDetails = RunEvent & { rsvps: RunRSVP[]; creator: Profile };
 
@@ -17,8 +18,8 @@ export default function RunsPage() {
   const [showTeams, setShowTeams] = useState<string | null>(null);
   const [teamData, setTeamData] = useState<{ team1: Profile[]; team2: Profile[] } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
 
-  // Form
   const [date, setDate] = useState('');
   const [time, setTime] = useState('18:00');
   const [format, setFormat] = useState('5v5');
@@ -40,16 +41,24 @@ export default function RunsPage() {
   useEffect(() => { load(); }, []);
 
   const handleCreate = async () => {
-    if (!userId || !date) return;
+    if (!userId || !date) {
+      toast.error('Pick a date first');
+      return;
+    }
+    setCreating(true);
     const startAt = new Date(`${date}T${time}`).toISOString();
     try {
       const run = await runEvents.create(userId, startAt, format, maxPlayers, note);
-      await runEvents.join(run.id, userId); // auto-RSVP creator
+      await runEvents.join(run.id, userId);
       setShowCreate(false);
       setDate(''); setNote('');
+      toast.success('Run created! 🏀');
       await load();
-    } catch (e) {
+    } catch (e: any) {
       console.error('Failed to create run', e);
+      toast.error(e?.message || 'Failed to create run');
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -57,9 +66,11 @@ export default function RunsPage() {
     if (!userId) return;
     try {
       await runEvents.join(runId, userId);
+      toast.success("You're in!");
       await load();
-    } catch (e) {
+    } catch (e: any) {
       console.error('Failed to join', e);
+      toast.error(e?.message || 'Failed to join');
     }
   };
 
@@ -67,9 +78,11 @@ export default function RunsPage() {
     if (!userId) return;
     try {
       await runEvents.leave(runId, userId);
+      toast.success('Left the run');
       await load();
-    } catch (e) {
+    } catch (e: any) {
       console.error('Failed to leave', e);
+      toast.error(e?.message || 'Failed to leave');
     }
   };
 
@@ -79,20 +92,29 @@ export default function RunsPage() {
       setTeamData(null);
       return;
     }
-    const rsvpProfiles = await runEvents.getRsvpProfiles(runId);
-    const sorted = [...rsvpProfiles].sort((a, b) => b.rating - a.rating);
-    const t1: Profile[] = [];
-    const t2: Profile[] = [];
-    sorted.forEach((p, i) => {
-      const round = Math.floor(i / 2);
-      if (round % 2 === 0) {
-        (i % 2 === 0 ? t1 : t2).push(p);
-      } else {
-        (i % 2 === 0 ? t2 : t1).push(p);
+    try {
+      const rsvpProfiles = await runEvents.getRsvpProfiles(runId);
+      if (rsvpProfiles.length < 2) {
+        toast.error('Need at least 2 players for teams');
+        return;
       }
-    });
-    setTeamData({ team1: t1, team2: t2 });
-    setShowTeams(runId);
+      const sorted = [...rsvpProfiles].sort((a, b) => b.rating - a.rating);
+      const t1: Profile[] = [];
+      const t2: Profile[] = [];
+      sorted.forEach((p, i) => {
+        const round = Math.floor(i / 2);
+        if (round % 2 === 0) {
+          (i % 2 === 0 ? t1 : t2).push(p);
+        } else {
+          (i % 2 === 0 ? t2 : t1).push(p);
+        }
+      });
+      setTeamData({ team1: t1, team2: t2 });
+      setShowTeams(runId);
+    } catch (e: any) {
+      console.error('Failed to generate teams', e);
+      toast.error('Failed to generate teams');
+    }
   };
 
   return (
@@ -126,12 +148,14 @@ export default function RunsPage() {
             </div>
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">Max Players</label>
-              <input type="number" value={maxPlayers} onChange={e => setMaxPlayers(+e.target.value)} className="w-full bg-secondary text-foreground rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+              <input type="number" min={2} max={30} value={maxPlayers} onChange={e => setMaxPlayers(+e.target.value)} className="w-full bg-secondary text-foreground rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
             </div>
           </div>
           <input type="text" placeholder="Add a note..." value={note} onChange={e => setNote(e.target.value)} className="w-full bg-secondary text-foreground placeholder:text-muted-foreground rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
           <div className="flex gap-2">
-            <Button onClick={handleCreate} className="flex-1 bg-gradient-court text-primary-foreground hover:opacity-90">Create</Button>
+            <Button onClick={handleCreate} disabled={creating} className="flex-1 bg-gradient-court text-primary-foreground hover:opacity-90">
+              {creating ? 'Creating...' : 'Create'}
+            </Button>
             <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
           </div>
         </motion.div>
@@ -154,7 +178,7 @@ export default function RunsPage() {
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-primary/20 text-primary">{run.format}</span>
-                        <span className="text-xs text-muted-foreground">by {run.creator.name}</span>
+                        <span className="text-xs text-muted-foreground">by {run.creator?.name || 'Unknown'}</span>
                       </div>
                       <div className="flex items-center gap-3 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{formatDate(run.start_at)}</span>
@@ -169,14 +193,16 @@ export default function RunsPage() {
 
                   {run.note && <p className="text-sm text-foreground/80 mb-3">"{run.note}"</p>}
 
-                  <div className="flex items-center gap-1 mb-3">
-                    {rsvpProfiles.slice(0, 6).map(u => (
-                      <div key={u.user_id} className="w-7 h-7 -ml-1 first:ml-0 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center border-2 border-card">
-                        {getInitials(u.name)}
-                      </div>
-                    ))}
-                    {rsvpProfiles.length > 6 && <span className="text-xs text-muted-foreground ml-1">+{rsvpProfiles.length - 6}</span>}
-                  </div>
+                  {rsvpProfiles.length > 0 && (
+                    <div className="flex items-center gap-1 mb-3">
+                      {rsvpProfiles.slice(0, 6).map(u => (
+                        <div key={u.user_id} className="w-7 h-7 -ml-1 first:ml-0 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center border-2 border-card">
+                          {getInitials(u.name)}
+                        </div>
+                      ))}
+                      {rsvpProfiles.length > 6 && <span className="text-xs text-muted-foreground ml-1">+{rsvpProfiles.length - 6}</span>}
+                    </div>
+                  )}
 
                   <div className="flex gap-2">
                     {iJoined ? (
