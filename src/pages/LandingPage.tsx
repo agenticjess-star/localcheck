@@ -21,10 +21,10 @@ export default function LandingPage({ onEnter, onSignIn }: { onEnter: () => void
       {/* Hero with background image */}
       <div className="relative overflow-hidden">
         <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-105 blur-[2px]"
           style={{ backgroundImage: 'url(/images/hero-bg.jpeg)' }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/70 to-background" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/75 to-background" />
         
         <div className="relative max-w-lg mx-auto px-6 pt-20 pb-28 text-center">
           <motion.div
