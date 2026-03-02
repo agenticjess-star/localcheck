@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Swords, Check, Clock, AlertTriangle } from 'lucide-react';
+import { Trophy, Swords, Check, AlertTriangle } from 'lucide-react';
 import { profiles, matches, type Profile, type Match1v1 } from '@/lib/db';
 import { useAuth } from '@/lib/auth-context';
 import { getInitials, timeAgo } from '@/lib/mock-data';
@@ -60,7 +60,7 @@ export default function CompetePage() {
       const lScore = iWon ? oppScore : myScore;
       await matches.create(winnerId, loserId, wScore, lScore);
       setShowLog(false);
-      toast.success('Match logged! Waiting for confirmation.');
+      toast.success('Match logged! Elo updated. 🏀');
       await load();
     } catch (e: any) {
       console.error('Failed to log match', e);
@@ -70,21 +70,10 @@ export default function CompetePage() {
     }
   };
 
-  const handleConfirm = async (matchId: string) => {
-    try {
-      await matches.confirm(matchId);
-      toast.success('Match confirmed! ✅');
-      await load();
-    } catch (e: any) {
-      console.error('Failed to confirm match', e);
-      toast.error(e?.message || 'Failed to confirm');
-    }
-  };
-
   const handleDispute = async (matchId: string) => {
     try {
       await matches.dispute(matchId);
-      toast.success('Match disputed');
+      toast.success('Match disputed — ratings reversed');
       await load();
     } catch (e: any) {
       console.error('Failed to dispute match', e);
@@ -179,11 +168,11 @@ export default function CompetePage() {
         <div className="space-y-2">
           {recentMatches.map((match, i) => {
             const isDisputed = match.status === 'disputed';
-            const isPending = match.status === 'pending';
-            const isLoser = match.loser_id === userId;
+            const isParticipant = match.winner_id === userId || match.loser_id === userId;
+            const canDispute = isParticipant && !isDisputed;
             return (
-              <motion.div key={match.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className={`bg-card border rounded-xl px-4 py-3 shadow-card ${isDisputed ? 'border-muted opacity-50' : 'border-border'}`}>
-        <div className="flex items-center">
+              <motion.div key={match.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className={`bg-card border rounded-xl px-4 py-3 shadow-card ${isDisputed ? 'border-accent/30 opacity-60' : 'border-border'}`}>
+                <div className="flex items-center">
                   {/* Winner side */}
                   <div className="flex items-center gap-2.5 flex-1 min-w-0">
                     <div className="w-9 h-9 rounded-full bg-court-green/20 text-court-green text-xs font-bold flex items-center justify-center shrink-0">{getInitials(match.winner?.name || '?')}</div>
@@ -212,26 +201,17 @@ export default function CompetePage() {
                       <span className="text-[10px] font-medium px-2.5 py-1 rounded-full bg-accent/15 text-accent flex items-center gap-1">
                         <AlertTriangle className="w-3 h-3" />Disputed
                       </span>
-                    ) : isPending ? (
+                    ) : (
                       <>
-                        <span className="text-[10px] font-medium px-2.5 py-1 rounded-full bg-court-amber/20 text-court-amber flex items-center gap-1">
-                          <Clock className="w-3 h-3" />Pending
+                        <span className="text-[10px] font-medium px-2.5 py-1 rounded-full bg-court-green/20 text-court-green flex items-center gap-1">
+                          <Check className="w-3 h-3" />Logged
                         </span>
-                        {isLoser && (
-                          <>
-                            <Button size="sm" variant="outline" onClick={() => handleConfirm(match.id)} className="h-7 text-[10px] px-2.5 border-court-green/30 text-court-green hover:bg-court-green/10">
-                              <Check className="w-3 h-3 mr-0.5" />Confirm
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => handleDispute(match.id)} className="h-7 text-[10px] px-2.5 border-accent/30 text-accent hover:bg-accent/10">
-                              <AlertTriangle className="w-3 h-3 mr-0.5" />Dispute
-                            </Button>
-                          </>
+                        {canDispute && (
+                          <Button size="sm" variant="outline" onClick={() => handleDispute(match.id)} className="h-7 text-[10px] px-2.5 border-accent/30 text-accent hover:bg-accent/10">
+                            <AlertTriangle className="w-3 h-3 mr-0.5" />Dispute
+                          </Button>
                         )}
                       </>
-                    ) : (
-                      <span className="text-[10px] font-medium px-2.5 py-1 rounded-full bg-court-green/20 text-court-green flex items-center gap-1">
-                        <Check className="w-3 h-3" />Confirmed
-                      </span>
                     )}
                   </div>
                 </div>
