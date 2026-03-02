@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Calendar, Trophy, Users, Bell } from 'lucide-react';
 import NowPage from '@/pages/NowPage';
@@ -6,7 +6,9 @@ import SchedulePage from '@/pages/SchedulePage';
 import CompetePage from '@/pages/CompetePage';
 import RunsPage from '@/pages/RunsPage';
 import ProfilePage from '@/pages/ProfilePage';
+import NotificationsPanel from '@/components/NotificationsPanel';
 import { useAuth } from '@/lib/auth-context';
+import { notifications } from '@/lib/db';
 import { getInitials } from '@/lib/mock-data';
 
 const tabs = [
@@ -19,10 +21,28 @@ const tabs = [
 type TabId = typeof tabs[number]['id'] | 'profile';
 
 export default function AppShell({ onLogout }: { onLogout: () => void }) {
-  const { profile } = useAuth();
+  const { profile, session } = useAuth();
+  const userId = session?.user?.id;
   const [activeTab, setActiveTab] = useState<TabId>('now');
+  const [showNotifs, setShowNotifs] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const displayName = profile?.name ?? 'User';
+
+  useEffect(() => {
+    if (!userId) return;
+    const loadCount = async () => {
+      try {
+        const count = await notifications.getUnreadCount(userId);
+        setUnreadCount(count);
+      } catch (e) {
+        console.error('Failed to load notification count', e);
+      }
+    };
+    loadCount();
+    const unsub = notifications.onChanges(userId, loadCount);
+    return unsub;
+  }, [userId]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -32,6 +52,17 @@ export default function AppShell({ onLogout }: { onLogout: () => void }) {
           <h1 className="font-display text-lg font-bold text-gradient-sunset">LocalCheck</h1>
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setShowNotifs(!showNotifs)}
+              className="relative w-8 h-8 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors"
+            >
+              <Bell className="w-4 h-4 text-muted-foreground" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-accent text-accent-foreground text-[9px] font-bold flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+            <button
               onClick={() => setActiveTab('profile')}
               className="w-8 h-8 rounded-full bg-primary/20 text-primary text-xs font-bold flex items-center justify-center hover:bg-primary/30 transition-colors"
             >
@@ -40,6 +71,11 @@ export default function AppShell({ onLogout }: { onLogout: () => void }) {
           </div>
         </div>
       </header>
+
+      {/* Notifications dropdown */}
+      <AnimatePresence>
+        {showNotifs && <NotificationsPanel onClose={() => setShowNotifs(false)} />}
+      </AnimatePresence>
 
       {/* Content */}
       <main className="flex-1 overflow-y-auto pb-20">
