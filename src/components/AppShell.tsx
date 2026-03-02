@@ -72,19 +72,18 @@ export default function AppShell({ onLogout }: { onLogout: () => void }) {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 flex flex-col items-center gap-1 py-3 transition-colors ${
+                className={`relative flex-1 flex flex-col items-center gap-1 py-3 transition-colors ${
                   isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                <Icon className="w-5 h-5" />
-                <span className="text-[11px] font-medium">{tab.label}</span>
                 {isActive && (
                   <motion.div
                     layoutId="tab-indicator"
-                    className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-court"
-                    style={{ width: '100%' }}
+                    className="absolute top-0 inset-x-0 h-0.5 bg-gradient-court"
                   />
                 )}
+                <Icon className="w-5 h-5" />
+                <span className="text-[11px] font-medium">{tab.label}</span>
               </button>
             );
           })}
