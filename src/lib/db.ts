@@ -286,6 +286,22 @@ export const matches = {
       .eq('id', matchId);
     if (error) throw error;
   },
+
+  dispute: async (matchId: string) => {
+    const { error } = await supabase
+      .from('matches_1v1')
+      .update({ status: 'disputed' })
+      .eq('id', matchId);
+    if (error) throw error;
+  },
+
+  onChanges: (cb: () => void) => {
+    const channel = supabase
+      .channel('matches_realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'matches_1v1' }, cb)
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  },
 };
 
 // ─── Run Events ──────────────────────────────────────────────
