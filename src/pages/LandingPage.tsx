@@ -19,12 +19,12 @@ export default function LandingPage({ onEnter, onSignIn }: { onEnter: () => void
   return (
     <div className="min-h-screen bg-background">
       {/* Hero with background image */}
-      <div className="relative overflow-hidden">
+      <div className="relative">
         <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-105 blur-[2px]"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-[1.02] blur-[0.5px]"
           style={{ backgroundImage: 'url(/images/hero-bg.jpeg)' }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/75 to-background" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/65 to-background" />
         
         <div className="relative max-w-lg mx-auto px-6 pt-20 pb-28 text-center">
           <motion.div
@@ -37,8 +37,8 @@ export default function LandingPage({ onEnter, onSignIn }: { onEnter: () => void
               Replace your group chat
             </div>
             
-            <h1 className="font-display text-5xl sm:text-6xl font-bold leading-[1.1] mb-4">
-              <span className="text-gradient-sunset">Local</span>Check
+            <h1 className="font-display text-5xl sm:text-6xl font-bold leading-[1.1] mb-4 tracking-tight">
+              <span className="text-gradient-sunset">Local</span><span className="text-foreground">Check</span>
             </h1>
             
             <p className="text-lg text-foreground/75 max-w-sm mx-auto mb-8 leading-relaxed">
@@ -47,20 +47,20 @@ export default function LandingPage({ onEnter, onSignIn }: { onEnter: () => void
             
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button
-                onClick={onEnter}
+                onClick={onSignIn ?? onEnter}
                 size="lg"
                 className="bg-gradient-court text-primary-foreground hover:opacity-90 shadow-glow text-base px-8 h-12"
               >
-                Try the Demo
+                Sign Up
                 <ChevronRight className="w-5 h-5 ml-1" />
               </Button>
               <Button
                 variant="outline"
                 size="lg"
-                onClick={onSignIn ?? onEnter}
+                onClick={onEnter}
                 className="border-foreground/20 text-foreground hover:bg-secondary backdrop-blur-sm h-12"
               >
-                Sign In
+                Check In
               </Button>
             </div>
           </motion.div>
@@ -68,7 +68,7 @@ export default function LandingPage({ onEnter, onSignIn }: { onEnter: () => void
       </div>
 
       {/* Stats */}
-      <div className="max-w-lg mx-auto px-6 -mt-10">
+      <div className="max-w-lg mx-auto px-6 -mt-8 relative z-10">
         <div className="grid grid-cols-3 gap-3">
           {stats.map((s, i) => (
             <motion.div

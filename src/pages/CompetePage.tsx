@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Swords, Check, Clock } from 'lucide-react';
+import { Trophy, Swords, Check, Clock, AlertTriangle } from 'lucide-react';
 import { profiles, matches, type Profile, type Match1v1 } from '@/lib/db';
 import { useAuth } from '@/lib/auth-context';
 import { getInitials, timeAgo } from '@/lib/mock-data';
@@ -24,7 +24,7 @@ export default function CompetePage() {
   const [oppScore, setOppScore] = useState(0);
   const [iWon, setIWon] = useState(true);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const [p, m] = await Promise.all([profiles.getAll(), matches.getRecent()]);
       setAllProfiles(p);
@@ -38,9 +38,13 @@ export default function CompetePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId, opponentId]);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    const unsub = matches.onChanges(() => load());
+    return unsub;
+  }, [load]);
 
   const handleSubmit = async () => {
     if (!userId || !opponentId) return;
@@ -74,6 +78,17 @@ export default function CompetePage() {
     } catch (e: any) {
       console.error('Failed to confirm match', e);
       toast.error(e?.message || 'Failed to confirm');
+    }
+  };
+
+  const handleDispute = async (matchId: string) => {
+    try {
+      await matches.dispute(matchId);
+      toast.success('Match disputed');
+      await load();
+    } catch (e: any) {
+      console.error('Failed to dispute match', e);
+      toast.error(e?.message || 'Failed to dispute');
     }
   };
 
@@ -162,44 +177,60 @@ export default function CompetePage() {
         <p className="text-sm text-muted-foreground text-center py-6">No matches yet. Log your first 1v1!</p>
       ) : (
         <div className="space-y-2">
-          {recentMatches.map((match, i) => (
-            <motion.div key={match.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className="bg-card border border-border rounded-xl px-4 py-3 shadow-card">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-court-green/20 text-court-green text-xs font-bold flex items-center justify-center">{getInitials(match.winner?.name || '?')}</div>
-                  <div>
-                    <span className="text-sm font-medium">{match.winner?.name || 'Unknown'}</span>
-                    <span className="text-xs text-muted-foreground ml-1">W</span>
-                  </div>
-                </div>
-                <span className="font-display font-bold text-lg text-primary">{match.winner_score}–{match.loser_score}</span>
-                <div className="flex items-center gap-2">
-                  <div className="text-right">
-                    <span className="text-sm font-medium">{match.loser?.name || 'Unknown'}</span>
-                    <span className="text-xs text-muted-foreground ml-1">L</span>
-                  </div>
-                  <div className="w-8 h-8 rounded-full bg-destructive/20 text-destructive text-xs font-bold flex items-center justify-center">{getInitials(match.loser?.name || '?')}</div>
-                </div>
-              </div>
-              <div className="flex items-center justify-between mt-2">
-                <span className="text-xs text-muted-foreground">{timeAgo(match.created_at)}</span>
-                {match.status === 'pending' ? (
+          {recentMatches.map((match, i) => {
+            const isDisputed = match.status === 'disputed';
+            const isPending = match.status === 'pending';
+            const isLoser = match.loser_id === userId;
+            return (
+              <motion.div key={match.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className={`bg-card border rounded-xl px-4 py-3 shadow-card ${isDisputed ? 'border-muted opacity-50' : 'border-border'}`}>
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-court-amber/20 text-court-amber">
-                      <Clock className="w-3 h-3 inline mr-1" />Pending
-                    </span>
-                    {match.loser_id === userId && (
-                      <Button size="sm" variant="outline" onClick={() => handleConfirm(match.id)} className="h-6 text-[10px] px-2">Confirm</Button>
-                    )}
+                    <div className="w-8 h-8 rounded-full bg-court-green/20 text-court-green text-xs font-bold flex items-center justify-center">{getInitials(match.winner?.name || '?')}</div>
+                    <div>
+                      <span className="text-sm font-medium">{match.winner?.name || 'Unknown'}</span>
+                      <span className="text-xs text-muted-foreground ml-1">W</span>
+                    </div>
                   </div>
-                ) : (
-                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-court-green/20 text-court-green">
-                    <Check className="w-3 h-3 inline mr-1" />Confirmed
-                  </span>
-                )}
-              </div>
-            </motion.div>
-          ))}
+                  <span className="font-display font-bold text-lg text-primary">{match.winner_score}–{match.loser_score}</span>
+                  <div className="flex items-center gap-2">
+                    <div className="text-right">
+                      <span className="text-sm font-medium">{match.loser?.name || 'Unknown'}</span>
+                      <span className="text-xs text-muted-foreground ml-1">L</span>
+                    </div>
+                    <div className="w-8 h-8 rounded-full bg-destructive/20 text-destructive text-xs font-bold flex items-center justify-center">{getInitials(match.loser?.name || '?')}</div>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-xs text-muted-foreground">{timeAgo(match.created_at)}</span>
+                  {isDisputed ? (
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-accent/15 text-accent flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" />Disputed
+                    </span>
+                  ) : isPending ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-court-amber/20 text-court-amber">
+                        <Clock className="w-3 h-3 inline mr-1" />Pending
+                      </span>
+                      {isLoser && (
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="outline" onClick={() => handleConfirm(match.id)} className="h-6 text-[10px] px-2 border-court-green/30 text-court-green hover:bg-court-green/10">
+                            <Check className="w-3 h-3 mr-0.5" />Confirm
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => handleDispute(match.id)} className="h-6 text-[10px] px-2 border-accent/30 text-accent hover:bg-accent/10">
+                            <AlertTriangle className="w-3 h-3 mr-0.5" />Dispute
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-court-green/20 text-court-green">
+                      <Check className="w-3 h-3 inline mr-1" />Confirmed
+                    </span>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       )}
     </div>
