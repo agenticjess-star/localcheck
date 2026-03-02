@@ -162,11 +162,11 @@ export default function CompetePage() {
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 ${i === 0 ? 'bg-gradient-court text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>{i + 1}</div>
                 <div className="w-9 h-9 rounded-full bg-primary/15 text-primary text-xs font-bold flex items-center justify-center shrink-0">{getInitials(user.name)}</div>
                 <div className="flex-1 min-w-0">
-                  <span className="font-medium text-sm">{user.name}</span>
-                  {user.handle && <p className="text-xs text-muted-foreground">@{user.handle}</p>}
+                  <p className="font-medium text-sm truncate">{user.name}</p>
+                  {user.handle && <p className="text-xs text-muted-foreground truncate">@{user.handle}</p>}
                 </div>
-                <div className="text-right shrink-0">
-                  <span className="font-display font-bold text-sm text-primary">{user.rating}</span>
+                <div className="text-right shrink-0 ml-2">
+                  <span className="font-display font-bold text-sm text-primary tabular-nums">{user.rating}</span>
                   <p className="text-[10px] text-muted-foreground">ELO</p>
                 </div>
               </motion.div>
@@ -183,50 +183,57 @@ export default function CompetePage() {
             const isLoser = match.loser_id === userId;
             return (
               <motion.div key={match.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className={`bg-card border rounded-xl px-4 py-3 shadow-card ${isDisputed ? 'border-muted opacity-50' : 'border-border'}`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-court-green/20 text-court-green text-xs font-bold flex items-center justify-center">{getInitials(match.winner?.name || '?')}</div>
-                    <div>
-                      <span className="text-sm font-medium">{match.winner?.name || 'Unknown'}</span>
-                      <span className="text-xs text-muted-foreground ml-1">W</span>
+        <div className="flex items-center">
+                  {/* Winner side */}
+                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                    <div className="w-9 h-9 rounded-full bg-court-green/20 text-court-green text-xs font-bold flex items-center justify-center shrink-0">{getInitials(match.winner?.name || '?')}</div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{match.winner?.name || 'Unknown'}</p>
+                      <span className="text-[10px] text-court-green font-medium">W</span>
                     </div>
                   </div>
-                  <span className="font-display font-bold text-lg text-primary">{match.winner_score}–{match.loser_score}</span>
-                  <div className="flex items-center gap-2">
-                    <div className="text-right">
-                      <span className="text-sm font-medium">{match.loser?.name || 'Unknown'}</span>
-                      <span className="text-xs text-muted-foreground ml-1">L</span>
+                  {/* Score */}
+                  <div className="font-display font-bold text-xl text-primary shrink-0 px-3 text-center tabular-nums">
+                    {match.winner_score}<span className="text-muted-foreground mx-0.5">–</span>{match.loser_score}
+                  </div>
+                  {/* Loser side */}
+                  <div className="flex items-center gap-2.5 flex-1 min-w-0 justify-end">
+                    <div className="min-w-0 text-right">
+                      <p className="text-sm font-medium truncate">{match.loser?.name || 'Unknown'}</p>
+                      <span className="text-[10px] text-destructive font-medium">L</span>
                     </div>
-                    <div className="w-8 h-8 rounded-full bg-destructive/20 text-destructive text-xs font-bold flex items-center justify-center">{getInitials(match.loser?.name || '?')}</div>
+                    <div className="w-9 h-9 rounded-full bg-destructive/20 text-destructive text-xs font-bold flex items-center justify-center shrink-0">{getInitials(match.loser?.name || '?')}</div>
                   </div>
                 </div>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-xs text-muted-foreground">{timeAgo(match.created_at)}</span>
-                  {isDisputed ? (
-                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-accent/15 text-accent flex items-center gap-1">
-                      <AlertTriangle className="w-3 h-3" />Disputed
-                    </span>
-                  ) : isPending ? (
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-court-amber/20 text-court-amber">
-                        <Clock className="w-3 h-3 inline mr-1" />Pending
+                <div className="flex items-center justify-between mt-3 pt-2 border-t border-border/50">
+                  <span className="text-[11px] text-muted-foreground">{timeAgo(match.created_at)}</span>
+                  <div className="flex items-center gap-1.5">
+                    {isDisputed ? (
+                      <span className="text-[10px] font-medium px-2.5 py-1 rounded-full bg-accent/15 text-accent flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" />Disputed
                       </span>
-                      {isLoser && (
-                        <div className="flex gap-1">
-                          <Button size="sm" variant="outline" onClick={() => handleConfirm(match.id)} className="h-6 text-[10px] px-2 border-court-green/30 text-court-green hover:bg-court-green/10">
-                            <Check className="w-3 h-3 mr-0.5" />Confirm
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => handleDispute(match.id)} className="h-6 text-[10px] px-2 border-accent/30 text-accent hover:bg-accent/10">
-                            <AlertTriangle className="w-3 h-3 mr-0.5" />Dispute
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-court-green/20 text-court-green">
-                      <Check className="w-3 h-3 inline mr-1" />Confirmed
-                    </span>
-                  )}
+                    ) : isPending ? (
+                      <>
+                        <span className="text-[10px] font-medium px-2.5 py-1 rounded-full bg-court-amber/20 text-court-amber flex items-center gap-1">
+                          <Clock className="w-3 h-3" />Pending
+                        </span>
+                        {isLoser && (
+                          <>
+                            <Button size="sm" variant="outline" onClick={() => handleConfirm(match.id)} className="h-7 text-[10px] px-2.5 border-court-green/30 text-court-green hover:bg-court-green/10">
+                              <Check className="w-3 h-3 mr-0.5" />Confirm
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => handleDispute(match.id)} className="h-7 text-[10px] px-2.5 border-accent/30 text-accent hover:bg-accent/10">
+                              <AlertTriangle className="w-3 h-3 mr-0.5" />Dispute
+                            </Button>
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-[10px] font-medium px-2.5 py-1 rounded-full bg-court-green/20 text-court-green flex items-center gap-1">
+                        <Check className="w-3 h-3" />Confirmed
+                      </span>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             );
