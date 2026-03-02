@@ -248,6 +248,70 @@ export const plans = {
   },
 };
 
+// ─── Notifications ───────────────────────────────────────────
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: string;
+  message: string;
+  match_id: string | null;
+  read: boolean;
+  created_at: string;
+}
+
+export const notifications = {
+  getForUser: async (userId: string): Promise<Notification[]> => {
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    return (data ?? []) as Notification[];
+  },
+
+  getUnreadCount: async (userId: string): Promise<number> => {
+    const { count, error } = await supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('read', false);
+    if (error) throw error;
+    return count ?? 0;
+  },
+
+  markRead: async (notifId: string) => {
+    const { error } = await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('id', notifId);
+    if (error) throw error;
+  },
+
+  markAllRead: async (userId: string) => {
+    const { error } = await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('user_id', userId)
+      .eq('read', false);
+    if (error) throw error;
+  },
+
+  onChanges: (userId: string, cb: () => void) => {
+    const channel = supabase
+      .channel(`notifications_${userId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${userId}`,
+      }, cb)
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  },
+};
+
 // ─── Matches ─────────────────────────────────────────────────
 export const matches = {
   getRecent: async (limit = 20): Promise<(Match1v1 & { winner: Profile; loser: Profile })[]> => {
@@ -276,14 +340,6 @@ export const matches = {
       winner_score: winnerScore,
       loser_score: loserScore,
     });
-    if (error) throw error;
-  },
-
-  confirm: async (matchId: string) => {
-    const { error } = await supabase
-      .from('matches_1v1')
-      .update({ status: 'confirmed' })
-      .eq('id', matchId);
     if (error) throw error;
   },
 
