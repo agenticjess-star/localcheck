@@ -1,4 +1,4 @@
-// Demo data for CourtCheck MVP
+// Demo data for LocalCheck MVP
 
 export interface User {
   id: string;
