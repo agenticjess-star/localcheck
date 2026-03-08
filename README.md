@@ -289,6 +289,26 @@ The project uses Lovable Cloud for its backend. Environment variables (`VITE_SUP
 
 ---
 
+---
+
+## 📸 Screenshots
+
+> **Add your own screenshots below!** Take them from the preview and replace the placeholder descriptions with image embeds.
+
+| Screen | Description |
+|--------|-------------|
+| <!-- ![Now Tab](public/screenshots/now-tab.png) --> | **Now Tab** — Real-time court presence with check-in cards and player count |
+| <!-- ![Court Map](public/screenshots/court-map.png) --> | **Court Map** — Mapbox dark-mode map with live player count badges on markers |
+| <!-- ![Compete Tab](public/screenshots/compete.png) --> | **Compete Tab** — ELO leaderboard and 1v1 match logging |
+| <!-- ![Schedule Tab](public/screenshots/schedule.png) --> | **Schedule Tab** — Calendar view with planned sessions |
+| <!-- ![Profile Page](public/screenshots/profile.png) --> | **Profile** — Player stats, rating, handle, and local court |
+| <!-- ![Auth Page](public/screenshots/auth.png) --> | **Auth** — Clean sign-up / login with email verification |
+| <!-- ![Landing Page](public/screenshots/landing.png) --> | **Landing** — Hero section introducing LocalCheck |
+
+*To add a screenshot: save images to `public/screenshots/`, then uncomment the `![...]()` markdown above.*
+
+---
+
 ## 📄 License
 
 Built with [Lovable](https://lovable.dev).
