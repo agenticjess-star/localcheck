@@ -12,6 +12,7 @@ export interface Profile {
   handle: string | null;
   avatar_url: string | null;
   rating: number;
+  local_court_id: string | null;
   created_at: string;
 }
 
@@ -128,7 +129,7 @@ export const profiles = {
     return data;
   },
 
-  update: async (userId: string, updates: Partial<Pick<Profile, 'name' | 'handle' | 'avatar_url'>>) => {
+  update: async (userId: string, updates: Partial<Pick<Profile, 'name' | 'handle' | 'avatar_url' | 'local_court_id'>>) => {
     const { error } = await supabase
       .from('profiles')
       .update(updates)
