@@ -12,6 +12,7 @@ export interface Profile {
   handle: string | null;
   avatar_url: string | null;
   rating: number;
+  local_court_id: string | null;
   created_at: string;
 }
 
@@ -128,7 +129,7 @@ export const profiles = {
     return data;
   },
 
-  update: async (userId: string, updates: Partial<Pick<Profile, 'name' | 'handle' | 'avatar_url'>>) => {
+  update: async (userId: string, updates: Partial<Pick<Profile, 'name' | 'handle' | 'avatar_url' | 'local_court_id'>>) => {
     const { error } = await supabase
       .from('profiles')
       .update(updates)
@@ -355,6 +356,47 @@ export const matches = {
     const channel = supabase
       .channel('matches_realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'matches_1v1' }, cb)
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  },
+};
+
+// ─── Courts ──────────────────────────────────────────────────
+export interface Court {
+  id: string;
+  name: string;
+  address: string;
+  lat: number;
+  lng: number;
+  zip_code: string | null;
+  added_by: string | null;
+  created_at: string;
+}
+
+export const courts = {
+  getAll: async (): Promise<Court[]> => {
+    const { data, error } = await supabase
+      .from('courts')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data ?? []) as Court[];
+  },
+
+  create: async (name: string, address: string, lat: number, lng: number, zipCode: string | null, addedBy: string) => {
+    const { data, error } = await supabase
+      .from('courts')
+      .insert({ name, address, lat, lng, zip_code: zipCode, added_by: addedBy })
+      .select()
+      .single();
+    if (error) throw error;
+    return data as Court;
+  },
+
+  onChanges: (cb: () => void) => {
+    const channel = supabase
+      .channel('courts_realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'courts' }, cb)
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   },

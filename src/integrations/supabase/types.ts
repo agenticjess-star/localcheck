@@ -41,6 +41,39 @@ export type Database = {
         }
         Relationships: []
       }
+      courts: {
+        Row: {
+          added_by: string | null
+          address: string
+          created_at: string
+          id: string
+          lat: number
+          lng: number
+          name: string
+          zip_code: string | null
+        }
+        Insert: {
+          added_by?: string | null
+          address: string
+          created_at?: string
+          id?: string
+          lat: number
+          lng: number
+          name: string
+          zip_code?: string | null
+        }
+        Update: {
+          added_by?: string | null
+          address?: string
+          created_at?: string
+          id?: string
+          lat?: number
+          lng?: number
+          name?: string
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
       matches_1v1: {
         Row: {
           court_id: string
@@ -140,6 +173,7 @@ export type Database = {
           created_at: string
           handle: string | null
           id: string
+          local_court_id: string | null
           name: string
           rating: number
           updated_at: string
@@ -150,6 +184,7 @@ export type Database = {
           created_at?: string
           handle?: string | null
           id?: string
+          local_court_id?: string | null
           name: string
           rating?: number
           updated_at?: string
@@ -160,12 +195,21 @@ export type Database = {
           created_at?: string
           handle?: string | null
           id?: string
+          local_court_id?: string | null
           name?: string
           rating?: number
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_local_court_id_fkey"
+            columns: ["local_court_id"]
+            isOneToOne: false
+            referencedRelation: "courts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       run_events: {
         Row: {
