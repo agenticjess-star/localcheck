@@ -32,8 +32,9 @@ export default function CourtMap({ onClose, onSelectCourt }: Props) {
 
   const loadCourts = async () => {
     try {
-      const c = await courts.getAll();
+      const [c, counts] = await Promise.all([courts.getAll(), checkIns.getActiveCountsByCourt()]);
       setAllCourts(c);
+      setCourtCounts(counts);
     } catch (e) {
       console.error('Failed to load courts', e);
     }
@@ -41,6 +42,10 @@ export default function CourtMap({ onClose, onSelectCourt }: Props) {
 
   useEffect(() => {
     loadCourts();
+    const unsub = checkIns.onChanges(() => {
+      checkIns.getActiveCountsByCourt().then(setCourtCounts).catch(() => {});
+    });
+    return unsub;
   }, []);
 
   useEffect(() => {
