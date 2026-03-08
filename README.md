@@ -278,9 +278,9 @@ The project uses Lovable Cloud for its backend. Environment variables (`VITE_SUP
 
 ## 🗺 Roadmap
 
+- [x] **Live check-in counts on map markers** — See court activity at a glance
 - [ ] **Court-filtered leaderboards** — Rankings scoped to your local court
 - [ ] **Zip code search** — Find courts near any zip code
-- [ ] **Live check-in counts on map markers** — See court activity at a glance
 - [ ] **Push notifications** — Service worker integration for background alerts
 - [ ] **Player profiles with stats history** — Win streaks, rating graphs, head-to-head records
 - [ ] **Tournament brackets** — Structured competition beyond 1v1
