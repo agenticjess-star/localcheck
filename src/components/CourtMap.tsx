@@ -155,7 +155,7 @@ export default function CourtMap({ onClose, onSelectCourt }: Props) {
     } else {
       map.current.on('load', addMarkers);
     }
-  }, [allCourts, onSelectCourt]);
+  }, [allCourts, courtCounts, onSelectCourt]);
 
   const handleGeocode = async () => {
     if (!addAddress.trim()) return;
