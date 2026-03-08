@@ -20,6 +20,7 @@ LocalCheck is a real-time, community-driven platform for pickup basketball playe
 - [Build Process & Decision Log](#-build-process--decision-log)
 - [Getting Started](#-getting-started)
 - [Roadmap](#-roadmap)
+- [Screenshots](#-screenshots)
 
 ---
 
@@ -277,14 +278,34 @@ The project uses Lovable Cloud for its backend. Environment variables (`VITE_SUP
 
 ## 🗺 Roadmap
 
+- [x] **Live check-in counts on map markers** — See court activity at a glance
 - [ ] **Court-filtered leaderboards** — Rankings scoped to your local court
 - [ ] **Zip code search** — Find courts near any zip code
-- [ ] **Live check-in counts on map markers** — See court activity at a glance
 - [ ] **Push notifications** — Service worker integration for background alerts
 - [ ] **Player profiles with stats history** — Win streaks, rating graphs, head-to-head records
 - [ ] **Tournament brackets** — Structured competition beyond 1v1
 - [ ] **Court photos & amenities** — Crowd-sourced court quality data
 - [ ] **Chat / court feed** — Real-time messaging per court community
+
+---
+
+---
+
+## 📸 Screenshots
+
+> **Add your own screenshots below!** Take them from the preview and replace the placeholder descriptions with image embeds.
+
+| Screen | Description |
+|--------|-------------|
+| <!-- ![Now Tab](public/screenshots/now-tab.png) --> | **Now Tab** — Real-time court presence with check-in cards and player count |
+| <!-- ![Court Map](public/screenshots/court-map.png) --> | **Court Map** — Mapbox dark-mode map with live player count badges on markers |
+| <!-- ![Compete Tab](public/screenshots/compete.png) --> | **Compete Tab** — ELO leaderboard and 1v1 match logging |
+| <!-- ![Schedule Tab](public/screenshots/schedule.png) --> | **Schedule Tab** — Calendar view with planned sessions |
+| <!-- ![Profile Page](public/screenshots/profile.png) --> | **Profile** — Player stats, rating, handle, and local court |
+| <!-- ![Auth Page](public/screenshots/auth.png) --> | **Auth** — Clean sign-up / login with email verification |
+| <!-- ![Landing Page](public/screenshots/landing.png) --> | **Landing** — Hero section introducing LocalCheck |
+
+*To add a screenshot: save images to `public/screenshots/`, then uncomment the `![...]()` markdown above.*
 
 ---
 

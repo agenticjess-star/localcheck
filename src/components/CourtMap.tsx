@@ -4,7 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Plus, X, Search, Navigation, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { courts, type Court } from '@/lib/db';
+import { courts, checkIns, type Court } from '@/lib/db';
 import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
 
@@ -22,6 +22,7 @@ export default function CourtMap({ onClose, onSelectCourt }: Props) {
   const userId = session?.user?.id;
 
   const [allCourts, setAllCourts] = useState<Court[]>([]);
+  const [courtCounts, setCourtCounts] = useState<Map<string, number>>(new Map());
   const [showAdd, setShowAdd] = useState(false);
   const [addName, setAddName] = useState('');
   const [addAddress, setAddAddress] = useState('');
@@ -31,8 +32,9 @@ export default function CourtMap({ onClose, onSelectCourt }: Props) {
 
   const loadCourts = async () => {
     try {
-      const c = await courts.getAll();
+      const [c, counts] = await Promise.all([courts.getAll(), checkIns.getActiveCountsByCourt()]);
       setAllCourts(c);
+      setCourtCounts(counts);
     } catch (e) {
       console.error('Failed to load courts', e);
     }
@@ -40,6 +42,10 @@ export default function CourtMap({ onClose, onSelectCourt }: Props) {
 
   useEffect(() => {
     loadCourts();
+    const unsub = checkIns.onChanges(() => {
+      checkIns.getActiveCountsByCourt().then(setCourtCounts).catch(() => {});
+    });
+    return unsub;
   }, []);
 
   useEffect(() => {
@@ -82,18 +88,37 @@ export default function CourtMap({ onClose, onSelectCourt }: Props) {
       document.querySelectorAll('.court-marker').forEach(el => el.remove());
 
       allCourts.forEach((court) => {
+        const count = courtCounts.get(court.id) || 0;
         const el = document.createElement('div');
         el.className = 'court-marker';
         el.style.cssText = `
-          width: 32px; height: 32px; border-radius: 50%;
+          width: 36px; height: 36px; border-radius: 50%;
           background: linear-gradient(135deg, hsl(32 95% 55%), hsl(42 90% 52%));
           border: 3px solid hsl(222 25% 6%);
           cursor: pointer;
-          box-shadow: 0 0 16px 4px hsla(32, 95%, 55%, 0.4);
+          box-shadow: 0 0 ${count > 0 ? '20' : '16'}px ${count > 0 ? '6' : '4'}px hsla(32, 95%, 55%, ${count > 0 ? '0.6' : '0.4'});
           transition: transform 0.2s;
           display: flex; align-items: center; justify-content: center;
+          position: relative;
         `;
         el.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="hsl(222,25%,6%)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>`;
+
+        if (count > 0) {
+          const badge = document.createElement('div');
+          badge.style.cssText = `
+            position: absolute; top: -6px; right: -6px;
+            min-width: 18px; height: 18px; border-radius: 9px;
+            background: hsl(142 70% 45%); color: white;
+            font-size: 10px; font-weight: 700; font-family: 'Space Grotesk', sans-serif;
+            display: flex; align-items: center; justify-content: center;
+            padding: 0 4px;
+            border: 2px solid hsl(222 25% 6%);
+            box-shadow: 0 0 8px 2px hsla(142, 70%, 45%, 0.5);
+          `;
+          badge.textContent = String(count);
+          el.appendChild(badge);
+        }
+
         el.addEventListener('mouseenter', () => { el.style.transform = 'scale(1.2)'; });
         el.addEventListener('mouseleave', () => { el.style.transform = 'scale(1)'; });
 
@@ -101,7 +126,8 @@ export default function CourtMap({ onClose, onSelectCourt }: Props) {
           .setHTML(`
             <div style="background:hsl(222,22%,9%);color:hsl(35,25%,93%);padding:10px 14px;border-radius:10px;font-family:'Space Grotesk',sans-serif;min-width:140px;">
               <p style="font-weight:600;font-size:13px;margin:0 0 2px;">${court.name}</p>
-              <p style="font-size:11px;color:hsl(222,12%,48%);margin:0;">${court.address}</p>
+              <p style="font-size:11px;color:hsl(222,12%,48%);margin:0 0 ${count > 0 ? '4px' : '0'};">${court.address}</p>
+              ${count > 0 ? `<p style="font-size:11px;margin:0;color:hsl(142,70%,45%);font-weight:600;">🏀 ${count} player${count !== 1 ? 's' : ''} here now</p>` : ''}
               ${onSelectCourt ? `<button id="select-court-${court.id}" style="margin-top:8px;width:100%;padding:6px;border-radius:6px;background:linear-gradient(135deg,hsl(32,95%,55%),hsl(42,90%,52%));color:hsl(222,25%,6%);font-weight:600;font-size:11px;border:none;cursor:pointer;">Set as My Court</button>` : ''}
             </div>
           `);
@@ -129,7 +155,7 @@ export default function CourtMap({ onClose, onSelectCourt }: Props) {
     } else {
       map.current.on('load', addMarkers);
     }
-  }, [allCourts, onSelectCourt]);
+  }, [allCourts, courtCounts, onSelectCourt]);
 
   const handleGeocode = async () => {
     if (!addAddress.trim()) return;
