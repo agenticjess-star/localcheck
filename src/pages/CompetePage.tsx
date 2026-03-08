@@ -83,10 +83,6 @@ export default function CompetePage() {
 
   const others = allProfiles.filter(p => p.user_id !== userId);
 
-  const courtName = profile?.local_court_id
-    ? allProfiles.length > 0 ? undefined : undefined // we'll resolve below
-    : null;
-
   const [localCourtName, setLocalCourtName] = useState<string | null>(null);
   useEffect(() => {
     if (!profile?.local_court_id) { setLocalCourtName(null); return; }
