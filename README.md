@@ -20,6 +20,7 @@ LocalCheck is a real-time, community-driven platform for pickup basketball playe
 - [Build Process & Decision Log](#-build-process--decision-log)
 - [Getting Started](#-getting-started)
 - [Roadmap](#-roadmap)
+- [Screenshots](#-screenshots)
 
 ---
 
