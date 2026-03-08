@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Swords, Check, AlertTriangle } from 'lucide-react';
-import { profiles, matches, type Profile, type Match1v1 } from '@/lib/db';
+import { Trophy, Swords, Check, AlertTriangle, MapPin } from 'lucide-react';
+import { profiles, matches, courts, type Profile, type Match1v1, type Court } from '@/lib/db';
 import { useAuth } from '@/lib/auth-context';
 import { getInitials, timeAgo } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
@@ -83,10 +83,29 @@ export default function CompetePage() {
 
   const others = allProfiles.filter(p => p.user_id !== userId);
 
+  const courtName = profile?.local_court_id
+    ? allProfiles.length > 0 ? undefined : undefined // we'll resolve below
+    : null;
+
+  const [localCourtName, setLocalCourtName] = useState<string | null>(null);
+  useEffect(() => {
+    if (!profile?.local_court_id) { setLocalCourtName(null); return; }
+    courts.getAll().then(all => {
+      setLocalCourtName(all.find(c => c.id === profile.local_court_id)?.name ?? null);
+    }).catch(() => {});
+  }, [profile?.local_court_id]);
+
   return (
     <div className="p-4 space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="font-display text-xl font-bold">Compete</h2>
+        <div>
+          <h2 className="font-display text-xl font-bold">Compete</h2>
+          {localCourtName && (
+            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+              <MapPin className="w-3 h-3 text-primary" />{localCourtName}
+            </p>
+          )}
+        </div>
         <Button size="sm" onClick={() => setShowLog(!showLog)} className="bg-gradient-court text-primary-foreground hover:opacity-90">
           <Swords className="w-4 h-4 mr-1" />
           Log 1v1
