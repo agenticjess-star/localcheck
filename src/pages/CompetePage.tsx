@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 type MatchWithProfiles = Match1v1 & { winner: Profile; loser: Profile };
 
 export default function CompetePage() {
-  const { session } = useAuth();
+  const { session, profile } = useAuth();
   const userId = session?.user?.id;
   const [tab, setTab] = useState<'leaderboard' | 'matches'>('leaderboard');
   const [showLog, setShowLog] = useState(false);
