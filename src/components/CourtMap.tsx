@@ -126,7 +126,8 @@ export default function CourtMap({ onClose, onSelectCourt }: Props) {
           .setHTML(`
             <div style="background:hsl(222,22%,9%);color:hsl(35,25%,93%);padding:10px 14px;border-radius:10px;font-family:'Space Grotesk',sans-serif;min-width:140px;">
               <p style="font-weight:600;font-size:13px;margin:0 0 2px;">${court.name}</p>
-              <p style="font-size:11px;color:hsl(222,12%,48%);margin:0;">${court.address}</p>
+              <p style="font-size:11px;color:hsl(222,12%,48%);margin:0 0 ${count > 0 ? '4px' : '0'};">${court.address}</p>
+              ${count > 0 ? `<p style="font-size:11px;margin:0;color:hsl(142,70%,45%);font-weight:600;">🏀 ${count} player${count !== 1 ? 's' : ''} here now</p>` : ''}
               ${onSelectCourt ? `<button id="select-court-${court.id}" style="margin-top:8px;width:100%;padding:6px;border-radius:6px;background:linear-gradient(135deg,hsl(32,95%,55%),hsl(42,90%,52%));color:hsl(222,25%,6%);font-weight:600;font-size:11px;border:none;cursor:pointer;">Set as My Court</button>` : ''}
             </div>
           `);
