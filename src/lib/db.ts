@@ -198,6 +198,17 @@ export const checkIns = {
     if (error) throw error;
   },
 
+  getActiveCountsByCourt: async (): Promise<Map<string, number>> => {
+    const { data, error } = await supabase
+      .from('check_ins')
+      .select('court_id')
+      .gt('expires_at', new Date().toISOString());
+    if (error) throw error;
+    const counts = new Map<string, number>();
+    (data ?? []).forEach(ci => counts.set(ci.court_id, (counts.get(ci.court_id) || 0) + 1));
+    return counts;
+  },
+
   onChanges: (cb: () => void) => {
     const channel = supabase
       .channel('check_ins_realtime')

@@ -4,7 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Plus, X, Search, Navigation, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { courts, type Court } from '@/lib/db';
+import { courts, checkIns, type Court } from '@/lib/db';
 import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
 
