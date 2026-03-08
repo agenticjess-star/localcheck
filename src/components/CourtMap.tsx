@@ -22,6 +22,7 @@ export default function CourtMap({ onClose, onSelectCourt }: Props) {
   const userId = session?.user?.id;
 
   const [allCourts, setAllCourts] = useState<Court[]>([]);
+  const [courtCounts, setCourtCounts] = useState<Map<string, number>>(new Map());
   const [showAdd, setShowAdd] = useState(false);
   const [addName, setAddName] = useState('');
   const [addAddress, setAddAddress] = useState('');
