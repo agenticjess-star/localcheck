@@ -68,7 +68,7 @@ export default function LandingPage({ onEnter, onSignIn }: { onEnter: () => void
       </div>
 
       {/* Stats */}
-      <div className="max-w-lg mx-auto px-6 -mt-8 relative z-10">
+      <div className="max-w-lg mx-auto px-4 sm:px-6 -mt-8 relative z-10">
         <div className="grid grid-cols-3 gap-3">
           {stats.map((s, i) => (
             <motion.div
