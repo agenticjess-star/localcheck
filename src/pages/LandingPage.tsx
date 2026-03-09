@@ -141,7 +141,7 @@ export default function LandingPage({ onEnter, onSignIn }: { onEnter: () => void
       </div>
 
       {/* CTA */}
-      <div className="max-w-lg mx-auto px-6 pb-16 text-center">
+      <div className="max-w-lg mx-auto px-4 sm:px-6 pb-16 text-center">
         <div className="bg-card border border-primary/20 rounded-2xl p-8 shadow-glow">
           <h2 className="font-display text-2xl font-bold mb-2">Ready to ball?</h2>
           <p className="text-sm text-muted-foreground mb-6">Join your court's community today.</p>
