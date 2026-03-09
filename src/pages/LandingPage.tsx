@@ -19,9 +19,9 @@ export default function LandingPage({ onEnter, onSignIn }: { onEnter: () => void
   return (
     <div className="min-h-screen bg-background">
       {/* Hero with background image */}
-      <div className="relative">
+      <div className="relative overflow-hidden">
         <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-[1.02] blur-[0.5px]"
+          className="absolute inset-[-4px] bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: 'url(/images/hero-bg.jpeg)' }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/65 to-background" />
