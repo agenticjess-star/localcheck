@@ -118,7 +118,7 @@ export default function RunsPage() {
   };
 
   return (
-    <div className="p-4 space-y-6">
+    <div className="p-4 space-y-6 max-w-lg mx-auto">
       <div className="flex items-center justify-between">
         <h2 className="font-display text-xl font-bold">Runs</h2>
         <Button size="sm" onClick={() => setShowCreate(!showCreate)} className="bg-gradient-court text-primary-foreground hover:opacity-90">

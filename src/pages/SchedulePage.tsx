@@ -121,7 +121,7 @@ export default function SchedulePage() {
     : `${MONTH_NAMES[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-4 max-w-lg mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="font-display text-xl font-bold">Schedule</h2>

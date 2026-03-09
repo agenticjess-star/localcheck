@@ -19,9 +19,9 @@ export default function LandingPage({ onEnter, onSignIn }: { onEnter: () => void
   return (
     <div className="min-h-screen bg-background">
       {/* Hero with background image */}
-      <div className="relative">
+      <div className="relative overflow-hidden">
         <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-[1.02] blur-[0.5px]"
+          className="absolute inset-[-4px] bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: 'url(/images/hero-bg.jpeg)' }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/65 to-background" />
@@ -68,7 +68,7 @@ export default function LandingPage({ onEnter, onSignIn }: { onEnter: () => void
       </div>
 
       {/* Stats */}
-      <div className="max-w-lg mx-auto px-6 -mt-8 relative z-10">
+      <div className="max-w-lg mx-auto px-4 sm:px-6 -mt-8 relative z-10">
         <div className="grid grid-cols-3 gap-3">
           {stats.map((s, i) => (
             <motion.div
@@ -86,7 +86,7 @@ export default function LandingPage({ onEnter, onSignIn }: { onEnter: () => void
       </div>
 
       {/* Features */}
-      <div className="max-w-lg mx-auto px-6 py-16 space-y-4">
+      <div className="max-w-lg mx-auto px-4 sm:px-6 py-16 space-y-4">
         <h2 className="font-display text-2xl font-bold text-center mb-8">
           Everything your court needs
         </h2>
@@ -113,7 +113,7 @@ export default function LandingPage({ onEnter, onSignIn }: { onEnter: () => void
       </div>
 
       {/* How it works */}
-      <div className="max-w-lg mx-auto px-6 pb-16">
+      <div className="max-w-lg mx-auto px-4 sm:px-6 pb-16">
         <h2 className="font-display text-2xl font-bold text-center mb-8">How it works</h2>
         <div className="space-y-4">
           {[
@@ -141,7 +141,7 @@ export default function LandingPage({ onEnter, onSignIn }: { onEnter: () => void
       </div>
 
       {/* CTA */}
-      <div className="max-w-lg mx-auto px-6 pb-16 text-center">
+      <div className="max-w-lg mx-auto px-4 sm:px-6 pb-16 text-center">
         <div className="bg-card border border-primary/20 rounded-2xl p-8 shadow-glow">
           <h2 className="font-display text-2xl font-bold mb-2">Ready to ball?</h2>
           <p className="text-sm text-muted-foreground mb-6">Join your court's community today.</p>
