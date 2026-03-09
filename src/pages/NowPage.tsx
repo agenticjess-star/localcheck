@@ -94,7 +94,7 @@ export default function NowPage() {
 
   return (
     <>
-      <div className="p-4 space-y-6">
+      <div className="p-4 space-y-6 max-w-lg mx-auto">
         {/* Court status */}
         <div className="relative overflow-hidden rounded-2xl bg-card border border-border p-5 shadow-card">
           <div className="absolute inset-0 court-pattern opacity-50" />

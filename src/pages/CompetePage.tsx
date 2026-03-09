@@ -92,7 +92,7 @@ export default function CompetePage() {
   }, [profile?.local_court_id]);
 
   return (
-    <div className="p-4 space-y-6">
+    <div className="p-4 space-y-6 max-w-lg mx-auto">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-display text-xl font-bold">Compete</h2>

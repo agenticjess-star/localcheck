@@ -54,7 +54,7 @@ export default function ProfilePage({ onLogout }: { onLogout: () => void }) {
 
   return (
     <>
-      <div className="p-4 space-y-6">
+      <div className="p-4 space-y-6 max-w-lg mx-auto">
         <div className="bg-card border border-border rounded-2xl p-6 shadow-card text-center">
           <div className="w-20 h-20 rounded-full bg-gradient-court text-primary-foreground text-2xl font-bold flex items-center justify-center mx-auto mb-4">
             {getInitials(profile.name)}
