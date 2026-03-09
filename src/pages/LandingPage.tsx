@@ -86,7 +86,7 @@ export default function LandingPage({ onEnter, onSignIn }: { onEnter: () => void
       </div>
 
       {/* Features */}
-      <div className="max-w-lg mx-auto px-6 py-16 space-y-4">
+      <div className="max-w-lg mx-auto px-4 sm:px-6 py-16 space-y-4">
         <h2 className="font-display text-2xl font-bold text-center mb-8">
           Everything your court needs
         </h2>
