@@ -113,7 +113,7 @@ export default function LandingPage({ onEnter, onSignIn }: { onEnter: () => void
       </div>
 
       {/* How it works */}
-      <div className="max-w-lg mx-auto px-6 pb-16">
+      <div className="max-w-lg mx-auto px-4 sm:px-6 pb-16">
         <h2 className="font-display text-2xl font-bold text-center mb-8">How it works</h2>
         <div className="space-y-4">
           {[
