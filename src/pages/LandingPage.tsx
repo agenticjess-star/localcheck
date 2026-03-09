@@ -83,7 +83,7 @@ export default function LandingPage({ onEnter, onSignIn }: { onEnter: () => void
 
   const fadeUp = {
     hidden: { opacity: 0, y: 24 },
-    show: (i: number = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.08, duration: 0.5, ease: 'easeOut' } }),
+    show: (i: number = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.08, duration: 0.5, ease: [0, 0, 0.2, 1] as const } }),
   };
 
   return (
